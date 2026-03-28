@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useData } from '@/lib/data-context';
 import { Plus, Edit2, Trash2, CheckCircle, XCircle } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function SemesterPage() {
   const { data, activeSemester, setActiveSemester, addSemester, updateSemester, deleteSemester } = useData();
@@ -12,27 +13,42 @@ export default function SemesterPage() {
 
   const handleAdd = async () => {
     if (semesterName.trim()) {
-      await addSemester(semesterName.trim());
-      setSemesterName('');
-      setIsAdding(false);
+      try {
+        await addSemester(semesterName.trim());
+        toast.success('Semester berhasil ditambahkan');
+        setSemesterName('');
+        setIsAdding(false);
+      } catch (error) {
+        toast.error('Gagal menambahkan semester');
+      }
     }
   };
 
   const handleUpdate = async (id: string) => {
     if (semesterName.trim()) {
-      await updateSemester(id, semesterName.trim());
-      setEditingId(null);
-      setSemesterName('');
+      try {
+        await updateSemester(id, semesterName.trim());
+        toast.success('Semester berhasil diperbarui');
+        setEditingId(null);
+        setSemesterName('');
+      } catch (error) {
+        toast.error('Gagal memperbarui semester');
+      }
     }
   };
 
   const handleDelete = async (id: string) => {
     if (activeSemester?.id === id) {
-      alert('Tidak dapat menghapus semester yang sedang aktif.');
+      toast.error('Tidak dapat menghapus semester yang sedang aktif.');
       return;
     }
     if (confirm('Apakah Anda yakin ingin menghapus semester ini?')) {
-      await deleteSemester(id);
+      try {
+        await deleteSemester(id);
+        toast.success('Semester berhasil dihapus');
+      } catch (error) {
+        toast.error('Gagal menghapus semester');
+      }
     }
   };
 

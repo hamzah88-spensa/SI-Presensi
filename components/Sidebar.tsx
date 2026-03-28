@@ -1,24 +1,16 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { useState } from 'react';
-import { Home, Users, BookOpen, CheckSquare, FileText, Settings, GraduationCap, ChevronDown, ChevronRight, BookMarked, X } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
+import { useState, useEffect, useMemo } from 'react';
+import { Home, Users, BookOpen, CheckSquare, FileText, Settings, GraduationCap, ChevronDown, ChevronRight, BookMarked, X, LogOut } from 'lucide-react';
+import Cookies from 'js-cookie';
+import { toast } from 'sonner';
 
 export function Sidebar({ onClose }: { onClose?: () => void }) {
   const pathname = usePathname();
-  const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({
-    referensi: true,
-    presensi: true,
-    penilaian: true,
-    jurnal: true,
-  });
-
-  const toggleMenu = (key: string) => {
-    setOpenMenus(prev => ({ ...prev, [key]: !prev[key] }));
-  };
-
-  const menuGroups = [
+  const router = useRouter();
+  const menuGroups = useMemo(() => [
     {
       title: 'Referensi',
       key: 'referensi',
@@ -47,6 +39,7 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
         { name: 'Input Formatif', href: '/penilaian/formatif', icon: FileText },
         { name: 'Input Sumatif', href: '/penilaian/sumatif', icon: FileText },
         { name: 'Rekap Nilai', href: '/penilaian/rekap', icon: FileText },
+        { name: 'Status Nilai', href: '/penilaian/status', icon: CheckSquare },
         { name: 'Perkembangan Siswa', href: '/penilaian/perkembangan', icon: Users },
       ]
     },
@@ -59,7 +52,54 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
         { name: 'Rekap Jurnal', href: '/jurnal/rekap', icon: FileText },
       ]
     }
-  ];
+  ], []);
+
+  const [openMenus, setOpenMenus] = useState<Record<string, boolean>>(() => {
+    const activeGroup = menuGroups.find(group => 
+      group.items.some(item => pathname === item.href || pathname.startsWith(item.href + '/'))
+    );
+    return activeGroup ? { [activeGroup.key]: true } : {
+      referensi: false,
+      presensi: false,
+      penilaian: false,
+      jurnal: false,
+    };
+  });
+
+  // Automatically open the menu that contains the active child when pathname changes
+  useEffect(() => {
+    const activeGroup = menuGroups.find(group => 
+      group.items.some(item => pathname === item.href || pathname.startsWith(item.href + '/'))
+    );
+    
+    if (activeGroup) {
+      setTimeout(() => {
+        setOpenMenus(prev => {
+          if (prev[activeGroup.key]) return prev;
+          return { [activeGroup.key]: true };
+        });
+      }, 0);
+    }
+  }, [pathname, menuGroups]);
+
+  const toggleMenu = (key: string) => {
+    setOpenMenus(prev => {
+      const newState = { ...prev };
+      // Close all other menus
+      Object.keys(newState).forEach(k => {
+        if (k !== key) newState[k] = false;
+      });
+      newState[key] = !prev[key];
+      return newState;
+    });
+  };
+
+  const handleLogout = () => {
+    Cookies.remove('auth_token');
+    toast.success('Berhasil keluar dari aplikasi');
+    router.push('/login');
+    router.refresh();
+  };
 
   return (
     <div className="w-64 bg-slate-900 text-white min-h-screen flex flex-col overflow-y-auto">
@@ -102,7 +142,7 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
               <button
                 onClick={() => toggleMenu(group.key)}
                 className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 ${
-                  hasActiveChild && !isOpen ? 'text-indigo-400' : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                  hasActiveChild ? 'bg-indigo-600/10 text-indigo-400' : 'text-slate-300 hover:bg-slate-800 hover:text-white'
                 }`}
               >
                 <div className="flex items-center gap-3">
@@ -120,6 +160,7 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
                       <Link
                         key={item.href}
                         href={item.href}
+                        onClick={() => onClose && onClose()}
                         className={`block px-4 py-2 rounded-lg text-sm transition-all duration-200 ${
                           isActive
                             ? 'bg-indigo-600/20 text-indigo-400 font-medium'
@@ -136,8 +177,18 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
           );
         })}
       </nav>
-      <div className="p-4 border-t border-slate-800 text-xs text-slate-500 text-center sticky bottom-0 bg-slate-900">
-        &copy; 2026 Sistem Akademik
+      
+      <div className="p-4 border-t border-slate-800 space-y-4 sticky bottom-0 bg-slate-900">
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-400 hover:bg-red-500/10 transition-all duration-200"
+        >
+          <LogOut className="w-5 h-5" />
+          <span className="font-medium">Keluar</span>
+        </button>
+        <div className="text-xs text-slate-500 text-center">
+          &copy; 2026 Sistem Akademik
+        </div>
       </div>
     </div>
   );

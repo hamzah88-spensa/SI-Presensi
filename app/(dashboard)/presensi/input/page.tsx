@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useData } from '@/lib/data-context';
 import { Plus, CheckSquare, Save, AlertCircle } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function InputPresensi() {
   const { data, activeSemester, saveKehadiranBatch } = useData();
@@ -16,10 +17,10 @@ export default function InputPresensi() {
   // When date or class changes, load students and existing data
   useEffect(() => {
     if (!selectedKelasId || !selectedDate || !activeSemester) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setAttendanceData({});
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setIsDataExists(false);
+      setTimeout(() => {
+        setAttendanceData({});
+        setIsDataExists(false);
+      }, 0);
       return;
     }
 
@@ -48,10 +49,10 @@ export default function InputPresensi() {
       }
     });
 
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setAttendanceData(newAttendanceData);
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setIsDataExists(existingRecords.length > 0);
+    setTimeout(() => {
+      setAttendanceData(newAttendanceData);
+      setIsDataExists(existingRecords.length > 0);
+    }, 0);
   }, [selectedKelasId, selectedDate, activeSemester, data.siswa, data.kehadiran]);
 
   const handleStatusChange = (siswaId: string, status: any) => {
@@ -95,16 +96,16 @@ export default function InputPresensi() {
       }));
 
     if (recordsToSave.length === 0) {
-      alert('Tidak ada perubahan data untuk disimpan.');
+      toast.info('Tidak ada perubahan data untuk disimpan.');
       return;
     }
 
     try {
       await saveKehadiranBatch(recordsToSave);
-      alert('Data presensi berhasil disimpan.');
+      toast.success('Data presensi berhasil disimpan.');
       setIsDataExists(true); // After saving, data exists
     } catch (error) {
-      alert('Terjadi kesalahan saat menyimpan data.');
+      toast.error('Terjadi kesalahan saat menyimpan data.');
     }
   };
 

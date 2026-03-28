@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useData } from '@/lib/data-context';
 import { Plus, Edit2, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function TPPage() {
   const { data, addTujuanPembelajaran, updateTujuanPembelajaran, deleteTujuanPembelajaran } = useData();
@@ -13,25 +14,40 @@ export default function TPPage() {
 
   const handleAdd = async () => {
     if (tpName.trim() && tpKktp > 0) {
-      await addTujuanPembelajaran(tpName.trim(), tpKktp);
-      setTpName('');
-      setTpKktp(75);
-      setIsAdding(false);
+      try {
+        await addTujuanPembelajaran(tpName.trim(), tpKktp);
+        toast.success('Tujuan Pembelajaran berhasil ditambahkan');
+        setTpName('');
+        setTpKktp(75);
+        setIsAdding(false);
+      } catch (error) {
+        toast.error('Gagal menambahkan Tujuan Pembelajaran');
+      }
     }
   };
 
   const handleUpdate = async (id: string) => {
     if (tpName.trim() && tpKktp > 0) {
-      await updateTujuanPembelajaran(id, { name: tpName.trim(), kktp: tpKktp });
-      setEditingId(null);
-      setTpName('');
-      setTpKktp(75);
+      try {
+        await updateTujuanPembelajaran(id, { name: tpName.trim(), kktp: tpKktp });
+        toast.success('Tujuan Pembelajaran berhasil diperbarui');
+        setEditingId(null);
+        setTpName('');
+        setTpKktp(75);
+      } catch (error) {
+        toast.error('Gagal memperbarui Tujuan Pembelajaran');
+      }
     }
   };
 
   const handleDelete = async (id: string) => {
     if (confirm('Apakah Anda yakin ingin menghapus Tujuan Pembelajaran ini?')) {
-      await deleteTujuanPembelajaran(id);
+      try {
+        await deleteTujuanPembelajaran(id);
+        toast.success('Tujuan Pembelajaran berhasil dihapus');
+      } catch (error) {
+        toast.error('Gagal menghapus Tujuan Pembelajaran');
+      }
     }
   };
 

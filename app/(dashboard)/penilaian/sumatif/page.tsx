@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useData } from '@/lib/data-context';
 import { Plus, Trash2, FileText, Edit2, Save, AlertCircle } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function PenilaianSumatifPage() {
   const { data, activeSemester, savePenilaianSumatifBatch } = useData();
@@ -28,10 +29,10 @@ export default function PenilaianSumatifPage() {
   // When class, TP, or Teknik changes, load students and existing data
   useEffect(() => {
     if (!selectedKelasId || !selectedTpId || !selectedTeknik || !activeSemester) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setSumatifData({});
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setIsDataExists(false);
+      setTimeout(() => {
+        setSumatifData({});
+        setIsDataExists(false);
+      }, 0);
       return;
     }
 
@@ -73,40 +74,33 @@ export default function PenilaianSumatifPage() {
       }
     });
 
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setSumatifData(newSumatifData);
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setIsDataExists(existingRecords.length > 0);
-    
-    if (existingRecords.length > 0 && selectedTeknik === 'Tes Tertulis') {
-      if (loadedJumlahSoal > 0) {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setJumlahSoal(loadedJumlahSoal);
+    setTimeout(() => {
+      setSumatifData(newSumatifData);
+      setIsDataExists(existingRecords.length > 0);
+      
+      if (existingRecords.length > 0 && selectedTeknik === 'Tes Tertulis') {
+        if (loadedJumlahSoal > 0) {
+          setJumlahSoal(loadedJumlahSoal);
+        }
+        if (loadedBobotSoal.length > 0) {
+          setBobotSoal(loadedBobotSoal);
+        }
+        if (Object.keys(loadedSkorSiswa).length > 0) {
+          setSkorSiswa(loadedSkorSiswa);
+        } else if (loadedJumlahSoal > 0) {
+          // Initialize empty scores if not present
+          const emptySkor: Record<string, (number | '')[]> = {};
+          studentsInClass.forEach(s => {
+            emptySkor[s.id] = Array(loadedJumlahSoal).fill('');
+          });
+          setSkorSiswa(emptySkor);
+        }
+      } else {
+        setJumlahSoal(0);
+        setBobotSoal([]);
+        setSkorSiswa({});
       }
-      if (loadedBobotSoal.length > 0) {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setBobotSoal(loadedBobotSoal);
-      }
-      if (Object.keys(loadedSkorSiswa).length > 0) {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setSkorSiswa(loadedSkorSiswa);
-      } else if (loadedJumlahSoal > 0) {
-        // Initialize empty scores if not present
-        const emptySkor: Record<string, (number | '')[]> = {};
-        studentsInClass.forEach(s => {
-          emptySkor[s.id] = Array(loadedJumlahSoal).fill('');
-        });
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setSkorSiswa(emptySkor);
-      }
-    } else {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setJumlahSoal(0);
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setBobotSoal([]);
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setSkorSiswa({});
-    }
+    }, 0);
   }, [selectedKelasId, selectedTpId, selectedTeknik, activeSemester, data.siswa, data.penilaianSumatif]);
 
   const handleJumlahSoalChange = (val: string) => {
@@ -165,39 +159,40 @@ export default function PenilaianSumatifPage() {
     const totalBobot = bobotSoal.reduce((acc, curr) => acc + (curr || 0), 0);
     if (totalBobot === 0) return;
 
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setSumatifData(prev => {
-      const newData = { ...prev };
-      let hasChanges = false;
-      
-      data.siswa.filter(s => s.kelasId === selectedKelasId).forEach(siswa => {
-        const skorArray = skorSiswa[siswa.id] || [];
-        let totalSkor = 0;
-        let hasInput = false;
+    setTimeout(() => {
+      setSumatifData(prev => {
+        const newData = { ...prev };
+        let hasChanges = false;
         
-        skorArray.forEach((skor) => {
-          if (skor !== '') {
-            hasInput = true;
-            totalSkor += Number(skor);
+        data.siswa.filter(s => s.kelasId === selectedKelasId).forEach(siswa => {
+          const skorArray = skorSiswa[siswa.id] || [];
+          let totalSkor = 0;
+          let hasInput = false;
+          
+          skorArray.forEach((skor) => {
+            if (skor !== '') {
+              hasInput = true;
+              totalSkor += Number(skor);
+            }
+          });
+
+          if (hasInput) {
+            const finalScore = Math.round((totalSkor / totalBobot) * 100);
+            if (newData[siswa.id]?.nilai !== finalScore) {
+              newData[siswa.id] = { ...newData[siswa.id], nilai: finalScore };
+              hasChanges = true;
+            }
+          } else {
+            if (newData[siswa.id]?.nilai !== '') {
+              newData[siswa.id] = { ...newData[siswa.id], nilai: '' };
+              hasChanges = true;
+            }
           }
         });
-
-        if (hasInput) {
-          const finalScore = Math.round((totalSkor / totalBobot) * 100);
-          if (newData[siswa.id]?.nilai !== finalScore) {
-            newData[siswa.id] = { ...newData[siswa.id], nilai: finalScore };
-            hasChanges = true;
-          }
-        } else {
-          if (newData[siswa.id]?.nilai !== '') {
-            newData[siswa.id] = { ...newData[siswa.id], nilai: '' };
-            hasChanges = true;
-          }
-        }
+        
+        return hasChanges ? newData : prev;
       });
-      
-      return hasChanges ? newData : prev;
-    });
+    }, 0);
   }, [skorSiswa, bobotSoal, selectedTeknik, jumlahSoal, selectedKelasId, data.siswa]);
 
   const handleNilaiChange = (siswaId: string, field: 'nilai' | 'nilaiRemedial', value: string) => {
@@ -253,16 +248,16 @@ export default function PenilaianSumatifPage() {
       }));
 
     if (recordsToSave.length === 0) {
-      alert('Tidak ada perubahan data untuk disimpan.');
+      toast.info('Tidak ada perubahan data untuk disimpan.');
       return;
     }
 
     try {
       await savePenilaianSumatifBatch(recordsToSave);
-      alert('Data penilaian sumatif berhasil disimpan.');
+      toast.success('Data penilaian sumatif berhasil disimpan.');
       setIsDataExists(true);
     } catch (error) {
-      alert('Terjadi kesalahan saat menyimpan data.');
+      toast.error('Terjadi kesalahan saat menyimpan data.');
     }
   };
 

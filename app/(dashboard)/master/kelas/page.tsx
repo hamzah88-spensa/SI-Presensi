@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useData } from '@/lib/data-context';
 import { Plus, Edit2, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function KelasPage() {
   const { data, addKelas, updateKelas, deleteKelas } = useData();
@@ -12,23 +13,38 @@ export default function KelasPage() {
 
   const handleAdd = async () => {
     if (className.trim()) {
-      await addKelas(className.trim());
-      setClassName('');
-      setIsAdding(false);
+      try {
+        await addKelas(className.trim());
+        toast.success('Kelas berhasil ditambahkan');
+        setClassName('');
+        setIsAdding(false);
+      } catch (error) {
+        toast.error('Gagal menambahkan kelas');
+      }
     }
   };
 
   const handleUpdate = async (id: string) => {
     if (className.trim()) {
-      await updateKelas(id, className.trim());
-      setEditingId(null);
-      setClassName('');
+      try {
+        await updateKelas(id, className.trim());
+        toast.success('Kelas berhasil diperbarui');
+        setEditingId(null);
+        setClassName('');
+      } catch (error) {
+        toast.error('Gagal memperbarui kelas');
+      }
     }
   };
 
   const handleDelete = async (id: string) => {
     if (confirm('Apakah Anda yakin ingin menghapus kelas ini?')) {
-      await deleteKelas(id);
+      try {
+        await deleteKelas(id);
+        toast.success('Kelas berhasil dihapus');
+      } catch (error) {
+        toast.error('Gagal menghapus kelas');
+      }
     }
   };
 

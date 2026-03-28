@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useData } from '@/lib/data-context';
 import { Plus, Trash2, FileText, Edit2, Save, AlertCircle } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function PenilaianFormatifPage() {
   const { data, activeSemester, savePenilaianFormatifBatch } = useData();
@@ -25,10 +26,10 @@ export default function PenilaianFormatifPage() {
   // When class, TP, or Teknik changes, load students and existing data
   useEffect(() => {
     if (!selectedKelasId || !selectedTpId || !selectedTeknik || !activeSemester) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setFormatifData({});
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setIsDataExists(false);
+      setTimeout(() => {
+        setFormatifData({});
+        setIsDataExists(false);
+      }, 0);
       return;
     }
 
@@ -62,10 +63,10 @@ export default function PenilaianFormatifPage() {
       }
     });
 
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setFormatifData(newFormatifData);
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setIsDataExists(existingRecords.length > 0);
+    setTimeout(() => {
+      setFormatifData(newFormatifData);
+      setIsDataExists(existingRecords.length > 0);
+    }, 0);
   }, [selectedKelasId, selectedTpId, selectedTeknik, activeSemester, data.siswa, data.penilaianFormatif]);
 
   const handleNilaiChange = (siswaId: string, nilai: any) => {
@@ -115,16 +116,16 @@ export default function PenilaianFormatifPage() {
       }));
 
     if (recordsToSave.length === 0) {
-      alert('Tidak ada perubahan data untuk disimpan.');
+      toast.info('Tidak ada perubahan data untuk disimpan.');
       return;
     }
 
     try {
       await savePenilaianFormatifBatch(recordsToSave);
-      alert('Data penilaian formatif berhasil disimpan.');
+      toast.success('Data penilaian formatif berhasil disimpan.');
       setIsDataExists(true);
     } catch (error) {
-      alert('Terjadi kesalahan saat menyimpan data.');
+      toast.error('Terjadi kesalahan saat menyimpan data.');
     }
   };
 

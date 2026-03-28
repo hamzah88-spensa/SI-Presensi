@@ -3,6 +3,7 @@
 import React, { useState, useMemo } from 'react';
 import { useData } from '@/lib/data-context';
 import { Plus, Edit2, Trash2, Users } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function InputJurnalPage() {
   const { data, addJurnal, updateJurnal, deleteJurnal, activeSemester } = useData();
@@ -38,29 +39,44 @@ export default function InputJurnalPage() {
 
   const handleAdd = async () => {
     if (date && kelasId && materi.trim()) {
-      const contentObj = { kelasId, materi, dinamika, refleksi, hambatan, solusi, absentStudents };
-      await addJurnal(date, 'Mengajar', JSON.stringify(contentObj));
-      resetForm();
-      setIsAdding(false);
+      try {
+        const contentObj = { kelasId, materi, dinamika, refleksi, hambatan, solusi, absentStudents };
+        await addJurnal(date, 'Mengajar', JSON.stringify(contentObj));
+        toast.success('Jurnal berhasil ditambahkan');
+        resetForm();
+        setIsAdding(false);
+      } catch (error) {
+        toast.error('Gagal menambahkan jurnal');
+      }
     } else {
-      alert('Tanggal, Kelas, dan Materi wajib diisi.');
+      toast.error('Tanggal, Kelas, dan Materi wajib diisi.');
     }
   };
 
   const handleUpdate = async (id: string) => {
     if (date && kelasId && materi.trim()) {
-      const contentObj = { kelasId, materi, dinamika, refleksi, hambatan, solusi, absentStudents };
-      await updateJurnal(id, { date, type: 'Mengajar', content: JSON.stringify(contentObj) });
-      setEditingId(null);
-      resetForm();
+      try {
+        const contentObj = { kelasId, materi, dinamika, refleksi, hambatan, solusi, absentStudents };
+        await updateJurnal(id, { date, type: 'Mengajar', content: JSON.stringify(contentObj) });
+        toast.success('Jurnal berhasil diperbarui');
+        setEditingId(null);
+        resetForm();
+      } catch (error) {
+        toast.error('Gagal memperbarui jurnal');
+      }
     } else {
-      alert('Tanggal, Kelas, dan Materi wajib diisi.');
+      toast.error('Tanggal, Kelas, dan Materi wajib diisi.');
     }
   };
 
   const handleDelete = async (id: string) => {
     if (confirm('Apakah Anda yakin ingin menghapus jurnal ini?')) {
-      await deleteJurnal(id);
+      try {
+        await deleteJurnal(id);
+        toast.success('Jurnal berhasil dihapus');
+      } catch (error) {
+        toast.error('Gagal menghapus jurnal');
+      }
     }
   };
 

@@ -4,6 +4,7 @@ import { useState, useRef } from 'react';
 import { useData } from '@/lib/data-context';
 import { Plus, Trash2, Users, Upload, Download, Edit2, Check, X } from 'lucide-react';
 import * as XLSX from 'xlsx';
+import { toast } from 'sonner';
 
 export default function DataSiswa() {
   const { data, addSiswa, updateSiswa, deleteSiswa, importSiswa } = useData();
@@ -20,12 +21,17 @@ export default function DataSiswa() {
   const [editJk, setEditJk] = useState<'L' | 'P'>('L');
   const [searchQuery, setSearchQuery] = useState('');
 
-  const handleAdd = (e: React.FormEvent) => {
+  const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     if (newSiswaName.trim() && newSiswaNisn.trim() && newSiswaKelasId) {
-      addSiswa(newSiswaName.trim(), newSiswaNisn.trim(), newSiswaKelasId, newSiswaJk);
-      setNewSiswaName('');
-      setNewSiswaNisn('');
+      try {
+        await addSiswa(newSiswaName.trim(), newSiswaNisn.trim(), newSiswaKelasId, newSiswaJk);
+        toast.success('Siswa berhasil ditambahkan');
+        setNewSiswaName('');
+        setNewSiswaNisn('');
+      } catch (error) {
+        toast.error('Gagal menambahkan siswa');
+      }
     }
   };
 
@@ -37,15 +43,20 @@ export default function DataSiswa() {
     setEditJk(siswa.jenisKelamin);
   };
 
-  const saveEdit = () => {
+  const saveEdit = async () => {
     if (editingId && editName.trim() && editNisn.trim() && editKelasId) {
-      updateSiswa(editingId, {
-        name: editName.trim(),
-        nisn: editNisn.trim(),
-        kelasId: editKelasId,
-        jenisKelamin: editJk
-      });
-      setEditingId(null);
+      try {
+        await updateSiswa(editingId, {
+          name: editName.trim(),
+          nisn: editNisn.trim(),
+          kelasId: editKelasId,
+          jenisKelamin: editJk
+        });
+        toast.success('Data siswa berhasil diperbarui');
+        setEditingId(null);
+      } catch (error) {
+        toast.error('Gagal memperbarui data siswa');
+      }
     }
   };
 
@@ -58,7 +69,7 @@ export default function DataSiswa() {
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = (evt) => {
+    reader.onload = async (evt) => {
       try {
         const bstr = evt.target?.result;
         const wb = XLSX.read(bstr, { type: 'binary' });
@@ -80,13 +91,13 @@ export default function DataSiswa() {
         }).filter(s => s.nisn && s.name);
 
         if (newSiswaList.length > 0) {
-          importSiswa(newSiswaList);
-          alert(`Berhasil mengimpor ${newSiswaList.length} data siswa.`);
+          await importSiswa(newSiswaList);
+          toast.success(`Berhasil mengimpor ${newSiswaList.length} data siswa.`);
         } else {
-          alert('Gagal mengimpor data. Pastikan format Excel sesuai template.');
+          toast.error('Gagal mengimpor data. Pastikan format Excel sesuai template.');
         }
       } catch (error: any) {
-        alert('Terjadi kesalahan saat membaca file: ' + error.message);
+        toast.error('Terjadi kesalahan saat membaca file: ' + error.message);
       }
       if (fileInputRef.current) fileInputRef.current.value = '';
     };
@@ -321,9 +332,14 @@ export default function DataSiswa() {
                                 <Edit2 className="w-5 h-5" />
                               </button>
                               <button
-                                onClick={() => {
+                                onClick={async () => {
                                   if (confirm('Yakin ingin menghapus siswa ini? Data kehadiran dan penilaiannya juga akan terhapus.')) {
-                                    deleteSiswa(siswa.id);
+                                    try {
+                                      await deleteSiswa(siswa.id);
+                                      toast.success('Siswa berhasil dihapus');
+                                    } catch (error) {
+                                      toast.error('Gagal menghapus siswa');
+                                    }
                                   }
                                 }}
                                 className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
