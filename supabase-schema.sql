@@ -12,6 +12,7 @@ CREATE TABLE semesters (
 CREATE TABLE kelas (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   name TEXT NOT NULL,
+  jenjang TEXT NOT NULL CHECK (jenjang IN ('7', '8', '9')),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
@@ -30,6 +31,7 @@ CREATE TABLE tujuan_pembelajaran (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   name TEXT NOT NULL,
   kktp INTEGER NOT NULL,
+  jenjang TEXT NOT NULL CHECK (jenjang IN ('7', '8', '9')),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 

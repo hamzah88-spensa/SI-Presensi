@@ -10,6 +10,15 @@ export default function StatusNilaiPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showDetail, setShowDetail] = useState<string | null>(null);
 
+  const selectedKelasData = useMemo(() => {
+    return data.kelas.find(k => k.id === selectedKelas);
+  }, [selectedKelas, data.kelas]);
+
+  const filteredTPs = useMemo(() => {
+    if (!selectedKelasData) return [];
+    return data.tujuanPembelajaran.filter(tp => tp.jenjang === selectedKelasData.jenjang);
+  }, [data.tujuanPembelajaran, selectedKelasData]);
+
   const filteredSiswa = useMemo(() => {
     return data.siswa.filter(s => 
       (!selectedKelas || s.kelasId === selectedKelas) &&
@@ -116,7 +125,7 @@ export default function StatusNilaiPage() {
               <tr className="bg-slate-50 border-b border-slate-200">
                 <th className="px-6 py-4 text-sm font-semibold text-slate-700 sticky left-0 bg-slate-50 z-10 border-r border-slate-200">No</th>
                 <th className="px-6 py-4 text-sm font-semibold text-slate-700 sticky left-[52px] bg-slate-50 z-10 border-r border-slate-200 min-w-[200px]">Nama Siswa</th>
-                {data.tujuanPembelajaran.map((tp, idx) => (
+                {filteredTPs.map((tp, idx) => (
                   <th key={tp.id} className="px-4 py-4 text-sm font-semibold text-slate-700 text-center min-w-[120px]">
                     <div className="flex flex-col items-center">
                       <span className="text-[10px] text-slate-400 uppercase tracking-wider">TP {idx + 1}</span>
@@ -128,7 +137,7 @@ export default function StatusNilaiPage() {
                 <th className="px-6 py-4 text-sm font-semibold text-slate-700 text-center no-print">Aksi</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-slate-100">
               {filteredSiswa.length > 0 ? (
                 filteredSiswa.map((siswa, index) => (
                   <tr key={siswa.id} className="hover:bg-slate-50/50 transition-colors">
@@ -139,7 +148,7 @@ export default function StatusNilaiPage() {
                         <span className="text-xs text-slate-400">{siswa.nisn}</span>
                       </div>
                     </td>
-                    {data.tujuanPembelajaran.map((tp) => {
+                    {filteredTPs.map((tp) => {
                       const status = getTPStatus(siswa.id, tp.id);
                       return (
                         <td key={tp.id} className="px-4 py-4 text-center">
@@ -177,7 +186,7 @@ export default function StatusNilaiPage() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={data.tujuanPembelajaran.length + 3} className="px-6 py-12 text-center text-slate-400">
+                  <td colSpan={filteredTPs.length + 3} className="px-6 py-12 text-center text-slate-400">
                     {selectedKelas ? 'Tidak ada data siswa di kelas ini.' : 'Pilih kelas untuk menampilkan data.'}
                   </td>
                 </tr>
@@ -206,7 +215,7 @@ export default function StatusNilaiPage() {
             <div className="p-6 overflow-y-auto max-h-[70vh]">
               <h3 className="font-semibold text-slate-800 mb-4">Detail Capaian Tujuan Pembelajaran</h3>
               <div className="space-y-4">
-                {data.tujuanPembelajaran.map((tp, idx) => {
+                {filteredTPs.map((tp, idx) => {
                   const status = getTPStatus(selectedSiswaDetail.id, tp.id);
                   const sumatif = data.penilaianSumatif.find(s => 
                     s.siswaId === selectedSiswaDetail.id && 

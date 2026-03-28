@@ -11,14 +11,16 @@ export default function TPPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [tpName, setTpName] = useState('');
   const [tpKktp, setTpKktp] = useState<number>(75);
+  const [jenjang, setJenjang] = useState<'7' | '8' | '9'>('7');
 
   const handleAdd = async () => {
     if (tpName.trim() && tpKktp > 0) {
       try {
-        await addTujuanPembelajaran(tpName.trim(), tpKktp);
+        await addTujuanPembelajaran(tpName.trim(), tpKktp, jenjang);
         toast.success('Tujuan Pembelajaran berhasil ditambahkan');
         setTpName('');
         setTpKktp(75);
+        setJenjang('7');
         setIsAdding(false);
       } catch (error) {
         toast.error('Gagal menambahkan Tujuan Pembelajaran');
@@ -29,11 +31,12 @@ export default function TPPage() {
   const handleUpdate = async (id: string) => {
     if (tpName.trim() && tpKktp > 0) {
       try {
-        await updateTujuanPembelajaran(id, { name: tpName.trim(), kktp: tpKktp });
+        await updateTujuanPembelajaran(id, { name: tpName.trim(), kktp: tpKktp, jenjang });
         toast.success('Tujuan Pembelajaran berhasil diperbarui');
         setEditingId(null);
         setTpName('');
         setTpKktp(75);
+        setJenjang('7');
       } catch (error) {
         toast.error('Gagal memperbarui Tujuan Pembelajaran');
       }
@@ -51,10 +54,11 @@ export default function TPPage() {
     }
   };
 
-  const startEdit = (id: string, currentName: string, currentKktp: number) => {
+  const startEdit = (id: string, currentName: string, currentKktp: number, currentJenjang: '7' | '8' | '9') => {
     setEditingId(id);
     setTpName(currentName);
     setTpKktp(currentKktp);
+    setJenjang(currentJenjang);
   };
 
   return (
@@ -66,6 +70,7 @@ export default function TPPage() {
             setIsAdding(true);
             setTpName('');
             setTpKktp(75);
+            setJenjang('7');
             setEditingId(null);
           }}
           className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white px-4 py-2 rounded-xl flex items-center gap-2 hover:opacity-90 transition"
@@ -81,6 +86,7 @@ export default function TPPage() {
             <thead className="bg-gray-50 border-b border-gray-100">
             <tr>
               <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">Tujuan Pembelajaran</th>
+              <th className="px-6 py-4 text-center text-sm font-semibold text-gray-600 w-32">Jenjang</th>
               <th className="px-6 py-4 text-center text-sm font-semibold text-gray-600 w-32">KKTP</th>
               <th className="px-6 py-4 text-right text-sm font-semibold text-gray-600 w-32">Aksi</th>
             </tr>
@@ -97,6 +103,17 @@ export default function TPPage() {
                     rows={2}
                     autoFocus
                   />
+                </td>
+                <td className="px-6 py-4">
+                  <select
+                    value={jenjang}
+                    onChange={(e) => setJenjang(e.target.value as '7' | '8' | '9')}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  >
+                    <option value="7">7</option>
+                    <option value="8">8</option>
+                    <option value="9">9</option>
+                  </select>
                 </td>
                 <td className="px-6 py-4">
                   <input
@@ -142,6 +159,21 @@ export default function TPPage() {
                 </td>
                 <td className="px-6 py-4 text-center">
                   {editingId === tp.id ? (
+                    <select
+                      value={jenjang}
+                      onChange={(e) => setJenjang(e.target.value as '7' | '8' | '9')}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    >
+                      <option value="7">7</option>
+                      <option value="8">8</option>
+                      <option value="9">9</option>
+                    </select>
+                  ) : (
+                    <span className="text-gray-600">{tp.jenjang}</span>
+                  )}
+                </td>
+                <td className="px-6 py-4 text-center">
+                  {editingId === tp.id ? (
                     <input
                       type="number"
                       value={tpKktp}
@@ -175,7 +207,7 @@ export default function TPPage() {
                   ) : (
                     <div className="flex justify-end gap-3">
                       <button
-                        onClick={() => startEdit(tp.id, tp.name, tp.kktp)}
+                        onClick={() => startEdit(tp.id, tp.name, tp.kktp, tp.jenjang)}
                         className="text-indigo-600 hover:text-indigo-800 transition"
                       >
                         <Edit2 size={18} />
@@ -193,7 +225,7 @@ export default function TPPage() {
             ))}
             {data.tujuanPembelajaran.length === 0 && !isAdding && (
               <tr>
-                <td colSpan={3} className="px-6 py-8 text-center text-gray-500">
+                <td colSpan={4} className="px-6 py-8 text-center text-gray-500">
                   Belum ada data Tujuan Pembelajaran. Silakan tambah data baru.
                 </td>
               </tr>

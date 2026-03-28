@@ -15,11 +15,20 @@ export default function PerkembanganSiswaPage() {
     return data.siswa.filter(s => s.kelasId === selectedKelas);
   }, [data.siswa, selectedKelas]);
 
+  const selectedKelasData = useMemo(() => {
+    return data.kelas.find(k => k.id === selectedKelas);
+  }, [selectedKelas, data.kelas]);
+
+  const filteredTPs = useMemo(() => {
+    if (!selectedKelasData) return [];
+    return data.tujuanPembelajaran.filter(tp => tp.jenjang === selectedKelasData.jenjang);
+  }, [data.tujuanPembelajaran, selectedKelasData]);
+
   const chartData = useMemo(() => {
     if (!selectedSiswa || !activeSemester) return [];
 
     // Menggabungkan nilai formatif dan sumatif berdasarkan TP
-    const perkembangan = data.tujuanPembelajaran.map(tp => {
+    const perkembangan = filteredTPs.map(tp => {
       const sumatif = data.penilaianSumatif.find(s => 
         s.siswaId === selectedSiswa && 
         s.tpId === tp.id && 
@@ -36,7 +45,7 @@ export default function PerkembanganSiswaPage() {
     });
 
     return perkembangan;
-  }, [selectedSiswa, data.tujuanPembelajaran, data.penilaianSumatif, activeSemester]);
+  }, [selectedSiswa, filteredTPs, data.penilaianSumatif, activeSemester]);
 
   const presensiSiswa = useMemo(() => {
     if (!selectedSiswa || !activeSemester) return null;
@@ -77,7 +86,7 @@ export default function PerkembanganSiswaPage() {
     return data.penilaianFormatif
       .filter(f => f.siswaId === selectedSiswa && f.semesterId === activeSemester.id && (f.umpanBalik || f.halPenting || f.halBingung))
       .map(f => {
-        const tp = data.tujuanPembelajaran.find(t => t.id === f.tpId);
+        const tp = filteredTPs.find(t => t.id === f.tpId);
         return {
           tpName: tp?.name || 'Unknown TP',
           teknik: f.teknik,
@@ -86,8 +95,9 @@ export default function PerkembanganSiswaPage() {
           halPenting: f.halPenting,
           halBingung: f.halBingung
         };
-      });
-  }, [selectedSiswa, activeSemester, data.penilaianFormatif, data.tujuanPembelajaran]);
+      })
+      .filter(f => f.tpName !== 'Unknown TP');
+  }, [selectedSiswa, activeSemester, data.penilaianFormatif, filteredTPs]);
 
   return (
     <div className="space-y-6">

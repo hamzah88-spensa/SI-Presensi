@@ -10,13 +10,15 @@ export default function KelasPage() {
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [className, setClassName] = useState('');
+  const [jenjang, setJenjang] = useState<'7' | '8' | '9'>('7');
 
   const handleAdd = async () => {
     if (className.trim()) {
       try {
-        await addKelas(className.trim());
+        await addKelas(className.trim(), jenjang);
         toast.success('Kelas berhasil ditambahkan');
         setClassName('');
+        setJenjang('7');
         setIsAdding(false);
       } catch (error) {
         toast.error('Gagal menambahkan kelas');
@@ -27,10 +29,11 @@ export default function KelasPage() {
   const handleUpdate = async (id: string) => {
     if (className.trim()) {
       try {
-        await updateKelas(id, className.trim());
+        await updateKelas(id, className.trim(), jenjang);
         toast.success('Kelas berhasil diperbarui');
         setEditingId(null);
         setClassName('');
+        setJenjang('7');
       } catch (error) {
         toast.error('Gagal memperbarui kelas');
       }
@@ -48,9 +51,10 @@ export default function KelasPage() {
     }
   };
 
-  const startEdit = (id: string, currentName: string) => {
+  const startEdit = (id: string, currentName: string, currentJenjang: '7' | '8' | '9') => {
     setEditingId(id);
     setClassName(currentName);
+    setJenjang(currentJenjang);
   };
 
   return (
@@ -61,6 +65,7 @@ export default function KelasPage() {
           onClick={() => {
             setIsAdding(true);
             setClassName('');
+            setJenjang('7');
             setEditingId(null);
           }}
           className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white px-4 py-2 rounded-xl flex items-center gap-2 hover:opacity-90 transition"
@@ -76,6 +81,7 @@ export default function KelasPage() {
             <thead className="bg-gray-50 border-b border-gray-100">
             <tr>
               <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">Nama Kelas</th>
+              <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">Jenjang</th>
               <th className="px-6 py-4 text-right text-sm font-semibold text-gray-600">Aksi</th>
             </tr>
           </thead>
@@ -91,6 +97,17 @@ export default function KelasPage() {
                     className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     autoFocus
                   />
+                </td>
+                <td className="px-6 py-4">
+                  <select
+                    value={jenjang}
+                    onChange={(e) => setJenjang(e.target.value as '7' | '8' | '9')}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  >
+                    <option value="7">7</option>
+                    <option value="8">8</option>
+                    <option value="9">9</option>
+                  </select>
                 </td>
                 <td className="px-6 py-4 text-right space-x-2">
                   <button
@@ -124,6 +141,21 @@ export default function KelasPage() {
                     <span className="text-gray-800 font-medium">{k.name}</span>
                   )}
                 </td>
+                <td className="px-6 py-4">
+                  {editingId === k.id ? (
+                    <select
+                      value={jenjang}
+                      onChange={(e) => setJenjang(e.target.value as '7' | '8' | '9')}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    >
+                      <option value="7">7</option>
+                      <option value="8">8</option>
+                      <option value="9">9</option>
+                    </select>
+                  ) : (
+                    <span className="text-gray-600">{k.jenjang}</span>
+                  )}
+                </td>
                 <td className="px-6 py-4 text-right">
                   {editingId === k.id ? (
                     <div className="space-x-2">
@@ -143,7 +175,7 @@ export default function KelasPage() {
                   ) : (
                     <div className="flex justify-end gap-3">
                       <button
-                        onClick={() => startEdit(k.id, k.name)}
+                        onClick={() => startEdit(k.id, k.name, k.jenjang)}
                         className="text-indigo-600 hover:text-indigo-800 transition"
                       >
                         <Edit2 size={18} />
@@ -161,7 +193,7 @@ export default function KelasPage() {
             ))}
             {data.kelas.length === 0 && !isAdding && (
               <tr>
-                <td colSpan={2} className="px-6 py-8 text-center text-gray-500">
+                <td colSpan={3} className="px-6 py-8 text-center text-gray-500">
                   Belum ada data kelas. Silakan tambah kelas baru.
                 </td>
               </tr>

@@ -15,9 +15,9 @@ type DbJurnal = Database['public']['Tables']['jurnal']['Row'];
 type DbAgenda = Database['public']['Tables']['agendas']['Row'];
 
 export type Semester = { id: string; name: string; isActive: boolean };
-export type Kelas = { id: string; name: string };
+export type Kelas = { id: string; name: string; jenjang: '7' | '8' | '9' };
 export type Siswa = { id: string; name: string; nisn: string; kelasId: string; jenisKelamin: 'L' | 'P' };
-export type TujuanPembelajaran = { id: string; name: string; kktp: number };
+export type TujuanPembelajaran = { id: string; name: string; kktp: number; jenjang: '7' | '8' | '9' };
 export type Kehadiran = { id: string; date: string; siswaId: string; status: 'Hadir' | 'Izin' | 'Sakit' | 'Alpa' | 'Bolos'; keterangan: string; semesterId: string };
 export type PenilaianFormatif = { id: string; siswaId: string; semesterId: string; tpId: string; teknik: 'Observasi' | 'CATs' | 'Exit Ticket'; nilai: 'SB' | 'B' | 'C' | 'PB'; umpanBalik?: string; halPenting?: string; halBingung?: string };
 export type PenilaianSumatif = { id: string; siswaId: string; semesterId: string; tpId: string; teknik: 'Tes Tertulis' | 'Kinerja' | 'Proyek'; nilai: number; nilaiRemedial?: number; jumlahSoal?: number; bobotSoal?: any; skorDetail?: any };
@@ -55,12 +55,12 @@ type DataContextType = {
   addSemester: (name: string) => Promise<void>;
   updateSemester: (id: string, name: string) => Promise<void>;
   deleteSemester: (id: string) => Promise<void>;
-  addKelas: (name: string) => Promise<void>;
-  updateKelas: (id: string, name: string) => Promise<void>;
+  addKelas: (name: string, jenjang: '7' | '8' | '9') => Promise<void>;
+  updateKelas: (id: string, name: string, jenjang: '7' | '8' | '9') => Promise<void>;
   addSiswa: (name: string, nisn: string, kelasId: string, jenisKelamin: 'L' | 'P') => Promise<void>;
   updateSiswa: (id: string, updates: Partial<Siswa>) => Promise<void>;
   importSiswa: (siswaList: Omit<Siswa, 'id'>[]) => Promise<void>;
-  addTujuanPembelajaran: (name: string, kktp: number) => Promise<void>;
+  addTujuanPembelajaran: (name: string, kktp: number, jenjang: '7' | '8' | '9') => Promise<void>;
   updateTujuanPembelajaran: (id: string, updates: Partial<TujuanPembelajaran>) => Promise<void>;
   addKehadiran: (date: string, siswaId: string, status: Kehadiran['status'], keterangan: string) => Promise<void>;
   updateKehadiran: (id: string, updates: Partial<Kehadiran>) => Promise<void>;
@@ -122,9 +122,9 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
       setData({
         semesters: (semesters || []).map(s => ({ id: s.id, name: s.name, isActive: s.is_active })),
-        kelas: (kelas || []).map(k => ({ id: k.id, name: k.name })),
+        kelas: (kelas || []).map(k => ({ id: k.id, name: k.name, jenjang: k.jenjang as '7' | '8' | '9' })),
         siswa: (siswa || []).map(s => ({ id: s.id, name: s.name, nisn: s.nisn, kelasId: s.kelas_id, jenisKelamin: s.jenis_kelamin })),
-        tujuanPembelajaran: (tps || []).map(t => ({ id: t.id, name: t.name, kktp: t.kktp })),
+        tujuanPembelajaran: (tps || []).map(t => ({ id: t.id, name: t.name, kktp: t.kktp, jenjang: t.jenjang as '7' | '8' | '9' })),
         kehadiran: (kehadiran || []).map(k => ({ id: k.id, date: k.date, siswaId: k.siswa_id, status: k.status, keterangan: k.keterangan || '', semesterId: k.semester_id })),
         penilaianFormatif: (formatif || []).map(f => ({ id: f.id, siswaId: f.siswa_id, semesterId: f.semester_id, tpId: f.tp_id, teknik: f.teknik, nilai: f.nilai, umpanBalik: f.umpan_balik || undefined, halPenting: f.hal_penting || undefined, halBingung: f.hal_bingung || undefined })),
         penilaianSumatif: (sumatif || []).map(s => ({ 
@@ -209,25 +209,25 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const addKelas = async (name: string) => {
+  const addKelas = async (name: string, jenjang: '7' | '8' | '9') => {
     try {
-      const { data: newKls, error } = await supabase.from('kelas').insert([{ name }]).select().single();
+      const { data: newKls, error } = await supabase.from('kelas').insert([{ name, jenjang }]).select().single();
       if (error) throw error;
       if (newKls) {
-        setData((prev) => ({ ...prev, kelas: [...prev.kelas, { id: newKls.id, name: newKls.name }] }));
+        setData((prev) => ({ ...prev, kelas: [...prev.kelas, { id: newKls.id, name: newKls.name, jenjang: newKls.jenjang as '7' | '8' | '9' }] }));
       }
     } catch (error) {
       console.error('Error adding kelas:', error);
     }
   };
 
-  const updateKelas = async (id: string, name: string) => {
+  const updateKelas = async (id: string, name: string, jenjang: '7' | '8' | '9') => {
     try {
-      const { error } = await supabase.from('kelas').update({ name }).eq('id', id);
+      const { error } = await supabase.from('kelas').update({ name, jenjang }).eq('id', id);
       if (error) throw error;
       setData((prev) => ({
         ...prev,
-        kelas: prev.kelas.map((k) => k.id === id ? { ...k, name } : k),
+        kelas: prev.kelas.map((k) => k.id === id ? { ...k, name, jenjang } : k),
       }));
     } catch (error) {
       console.error('Error updating kelas:', error);
@@ -284,12 +284,12 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const addTujuanPembelajaran = async (name: string, kktp: number) => {
+  const addTujuanPembelajaran = async (name: string, kktp: number, jenjang: '7' | '8' | '9') => {
     try {
-      const { data: newTP, error } = await supabase.from('tujuan_pembelajaran').insert([{ name, kktp }]).select().single();
+      const { data: newTP, error } = await supabase.from('tujuan_pembelajaran').insert([{ name, kktp, jenjang }]).select().single();
       if (error) throw error;
       if (newTP) {
-        setData((prev) => ({ ...prev, tujuanPembelajaran: [...prev.tujuanPembelajaran, { id: newTP.id, name: newTP.name, kktp: newTP.kktp }] }));
+        setData((prev) => ({ ...prev, tujuanPembelajaran: [...prev.tujuanPembelajaran, { id: newTP.id, name: newTP.name, kktp: newTP.kktp, jenjang: newTP.jenjang as '7' | '8' | '9' }] }));
       }
     } catch (error) {
       console.error('Error adding TP:', error);
