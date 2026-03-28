@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { useData } from '@/lib/data-context';
-import { X } from 'lucide-react';
+import { X, Printer } from 'lucide-react';
 
 export default function RekapPresensiPage() {
   const { data, activeSemester } = useData();
@@ -74,7 +74,7 @@ export default function RekapPresensiPage() {
   }, [selectedStudentDetail, data, activeSemester, startDate, endDate, rekapData]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 no-print">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-gray-800">Rekap Presensi</h1>
       </div>
@@ -168,9 +168,18 @@ export default function RekapPresensiPage() {
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
             <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gradient-to-r from-indigo-500 to-purple-500 text-white">
               <h2 className="text-xl font-bold">Detail Monitoring: {studentDetail.student.name}</h2>
-              <button onClick={() => setSelectedStudentDetail(null)} className="text-white/80 hover:text-white transition-colors">
-                <X className="w-6 h-6" />
-              </button>
+              <div className="flex items-center gap-3">
+                <button 
+                  onClick={() => window.print()} 
+                  className="flex items-center gap-2 bg-white/20 hover:bg-white/30 text-white px-3 py-1.5 rounded-lg transition-colors text-sm font-medium no-print"
+                >
+                  <Printer className="w-4 h-4" />
+                  Cetak
+                </button>
+                <button onClick={() => setSelectedStudentDetail(null)} className="text-white/80 hover:text-white transition-colors no-print">
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
             </div>
             <div className="p-6 overflow-y-auto flex-1 space-y-8">
               
@@ -275,6 +284,68 @@ export default function RekapPresensiPage() {
           </div>
         </div>
       )}
+      {/* Print Styles */}
+      <style jsx global>{`
+        @media print {
+          .no-print {
+            display: none !important;
+          }
+          body {
+            background: white !important;
+            padding: 0 !important;
+            margin: 0 !important;
+          }
+          /* Hide layout elements */
+          aside, nav, header, .sidebar, .topbar {
+            display: none !important;
+          }
+          /* Reset modal positioning for print */
+          .fixed.inset-0 {
+            position: relative !important;
+            background: white !important;
+            padding: 0 !important;
+            display: block !important;
+          }
+          .bg-white.rounded-2xl {
+            box-shadow: none !important;
+            border: none !important;
+            width: 100% !important;
+            max-width: none !important;
+            max-height: none !important;
+            overflow: visible !important;
+          }
+          .overflow-y-auto {
+            overflow: visible !important;
+            max-height: none !important;
+          }
+          .flex-1 {
+            overflow: visible !important;
+          }
+          /* Ensure text colors are visible */
+          .text-white {
+            color: black !important;
+          }
+          .bg-gradient-to-r {
+            background: none !important;
+            border-bottom: 2px solid #eee !important;
+          }
+          .text-white h2 {
+            color: black !important;
+          }
+          /* Grid adjustments for print */
+          .grid {
+            display: block !important;
+          }
+          .grid > div {
+            margin-bottom: 1rem !important;
+            width: 100% !important;
+          }
+          .md\:grid-cols-5 {
+            display: grid !important;
+            grid-template-columns: repeat(5, 1fr) !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }
