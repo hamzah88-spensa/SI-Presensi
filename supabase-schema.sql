@@ -83,6 +83,16 @@ CREATE TABLE jurnal (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
+-- 9. Agendas Table
+CREATE TABLE agendas (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  title TEXT NOT NULL,
+  start_date DATE NOT NULL,
+  end_date DATE NOT NULL,
+  category TEXT NOT NULL CHECK (category IN ('Kegiatan', 'Libur', 'Sumatif Lingkup Materi', 'Sumatif Akhir Semester', 'Sumatif Akhir Tahun', 'Sumatif Akhir Fase', 'Lainnya')),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
 -- Enable Row Level Security (RLS)
 -- Since this is a single-user admin app for now, we'll allow all operations for authenticated users (anon key in this context)
 -- In a real production app with multiple users, you'd restrict this based on auth.uid()
@@ -95,6 +105,7 @@ ALTER TABLE kehadiran ENABLE ROW LEVEL SECURITY;
 ALTER TABLE penilaian_formatif ENABLE ROW LEVEL SECURITY;
 ALTER TABLE penilaian_sumatif ENABLE ROW LEVEL SECURITY;
 ALTER TABLE jurnal ENABLE ROW LEVEL SECURITY;
+ALTER TABLE agendas ENABLE ROW LEVEL SECURITY;
 
 -- Create policies to allow all operations (for demo/admin purposes)
 CREATE POLICY "Allow all operations for anon" ON semesters FOR ALL USING (true);
@@ -105,3 +116,4 @@ CREATE POLICY "Allow all operations for anon" ON kehadiran FOR ALL USING (true);
 CREATE POLICY "Allow all operations for anon" ON penilaian_formatif FOR ALL USING (true);
 CREATE POLICY "Allow all operations for anon" ON penilaian_sumatif FOR ALL USING (true);
 CREATE POLICY "Allow all operations for anon" ON jurnal FOR ALL USING (true);
+CREATE POLICY "Allow all operations for anon" ON agendas FOR ALL USING (true);

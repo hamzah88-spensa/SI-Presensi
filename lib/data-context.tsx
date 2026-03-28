@@ -12,6 +12,7 @@ type DbKehadiran = Database['public']['Tables']['kehadiran']['Row'];
 type DbPenilaianFormatif = Database['public']['Tables']['penilaian_formatif']['Row'];
 type DbPenilaianSumatif = Database['public']['Tables']['penilaian_sumatif']['Row'];
 type DbJurnal = Database['public']['Tables']['jurnal']['Row'];
+type DbAgenda = Database['public']['Tables']['agendas']['Row'];
 
 export type Semester = { id: string; name: string; isActive: boolean };
 export type Kelas = { id: string; name: string };
@@ -21,6 +22,7 @@ export type Kehadiran = { id: string; date: string; siswaId: string; status: 'Ha
 export type PenilaianFormatif = { id: string; siswaId: string; semesterId: string; tpId: string; teknik: 'Observasi' | 'CATs' | 'Exit Ticket'; nilai: 'SB' | 'B' | 'C' | 'PB'; umpanBalik?: string; halPenting?: string; halBingung?: string };
 export type PenilaianSumatif = { id: string; siswaId: string; semesterId: string; tpId: string; teknik: 'Tes Tertulis' | 'Kinerja' | 'Proyek'; nilai: number; nilaiRemedial?: number; jumlahSoal?: number; bobotSoal?: any; skorDetail?: any };
 export type Jurnal = { id: string; date: string; type: 'Mengajar' | 'Refleksi'; content: string; semesterId: string };
+export type Agenda = { id: string; title: string; startDate: string; endDate: string; category: 'Kegiatan' | 'Libur' | 'Sumatif Lingkup Materi' | 'Sumatif Akhir Semester' | 'Sumatif Akhir Tahun' | 'Sumatif Akhir Fase' | 'Lainnya' };
 
 type AppData = {
   semesters: Semester[];
@@ -31,6 +33,7 @@ type AppData = {
   penilaianFormatif: PenilaianFormatif[];
   penilaianSumatif: PenilaianSumatif[];
   jurnal: Jurnal[];
+  agendas: Agenda[];
 };
 
 const defaultData: AppData = {
@@ -42,6 +45,7 @@ const defaultData: AppData = {
   penilaianFormatif: [],
   penilaianSumatif: [],
   jurnal: [],
+  agendas: [],
 };
 
 type DataContextType = {
@@ -69,6 +73,9 @@ type DataContextType = {
   savePenilaianSumatifBatch: (records: { id?: string, siswaId: string, tpId: string, teknik: PenilaianSumatif['teknik'], nilai: number, nilaiRemedial?: number | null, jumlahSoal?: number | null, bobotSoal?: any | null, skorDetail?: any | null }[]) => Promise<void>;
   addJurnal: (date: string, type: Jurnal['type'], content: string) => Promise<void>;
   updateJurnal: (id: string, updates: Partial<Jurnal>) => Promise<void>;
+  addAgenda: (title: string, startDate: string, endDate: string, category: Agenda['category']) => Promise<void>;
+  updateAgenda: (id: string, updates: Partial<Agenda>) => Promise<void>;
+  deleteAgenda: (id: string) => Promise<void>;
   deleteKelas: (id: string) => Promise<void>;
   deleteSiswa: (id: string) => Promise<void>;
   deleteTujuanPembelajaran: (id: string) => Promise<void>;
@@ -99,7 +106,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         { data: kehadiran },
         { data: formatif },
         { data: sumatif },
-        { data: jurnal }
+        { data: jurnal },
+        { data: agendas }
       ] = await Promise.all([
         supabase.from('semesters').select('*').order('created_at', { ascending: true }),
         supabase.from('kelas').select('*').order('created_at', { ascending: true }),
@@ -109,6 +117,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         supabase.from('penilaian_formatif').select('*').order('created_at', { ascending: false }),
         supabase.from('penilaian_sumatif').select('*').order('created_at', { ascending: false }),
         supabase.from('jurnal').select('*').order('date', { ascending: false }),
+        supabase.from('agendas').select('*').order('start_date', { ascending: true }),
       ]);
 
       setData({
@@ -131,6 +140,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
           skorDetail: (s.skor_detail as number[]) ?? undefined 
         })),
         jurnal: (jurnal || []).map(j => ({ id: j.id, date: j.date, type: j.type, content: j.content, semesterId: j.semester_id })),
+        agendas: (agendas || []).map(a => ({ id: a.id, title: a.title, startDate: a.start_date, endDate: a.end_date, category: a.category })),
       });
     } catch (error) {
       console.error('Error fetching data from Supabase:', error);
@@ -616,6 +626,48 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const addAgenda = async (title: string, startDate: string, endDate: string, category: Agenda['category']) => {
+    try {
+      const { data: newAgenda, error } = await supabase.from('agendas').insert([{ title, start_date: startDate, end_date: endDate, category }]).select().single();
+      if (error) throw error;
+      if (newAgenda) {
+        setData((prev) => ({ ...prev, agendas: [...prev.agendas, { id: newAgenda.id, title: newAgenda.title, startDate: newAgenda.start_date, endDate: newAgenda.end_date, category: newAgenda.category }] }));
+      }
+    } catch (error) {
+      console.error('Error adding agenda:', error);
+    }
+  };
+
+  const updateAgenda = async (id: string, updates: Partial<Agenda>) => {
+    try {
+      const dbUpdates: any = {};
+      if (updates.title) dbUpdates.title = updates.title;
+      if (updates.startDate) dbUpdates.start_date = updates.startDate;
+      if (updates.endDate) dbUpdates.end_date = updates.endDate;
+      if (updates.category) dbUpdates.category = updates.category;
+
+      const { error } = await supabase.from('agendas').update(dbUpdates).eq('id', id);
+      if (error) throw error;
+
+      setData((prev) => ({
+        ...prev,
+        agendas: prev.agendas.map((a) => a.id === id ? { ...a, ...updates } : a),
+      }));
+    } catch (error) {
+      console.error('Error updating agenda:', error);
+    }
+  };
+
+  const deleteAgenda = async (id: string) => {
+    try {
+      const { error } = await supabase.from('agendas').delete().eq('id', id);
+      if (error) throw error;
+      setData((prev) => ({ ...prev, agendas: prev.agendas.filter((a) => a.id !== id) }));
+    } catch (error) {
+      console.error('Error deleting agenda:', error);
+    }
+  };
+
   const deleteKelas = async (id: string) => {
     try {
       const { error } = await supabase.from('kelas').delete().eq('id', id);
@@ -728,6 +780,9 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         savePenilaianSumatifBatch,
         addJurnal,
         updateJurnal,
+        addAgenda,
+        updateAgenda,
+        deleteAgenda,
         deleteKelas,
         deleteSiswa,
         deleteTujuanPembelajaran,

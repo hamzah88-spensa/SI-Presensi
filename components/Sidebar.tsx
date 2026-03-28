@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect, useMemo } from 'react';
-import { Home, Users, BookOpen, CheckSquare, FileText, Settings, GraduationCap, ChevronDown, ChevronRight, BookMarked, X, LogOut } from 'lucide-react';
+import { Home, Users, BookOpen, CheckSquare, FileText, Settings, GraduationCap, ChevronDown, ChevronRight, BookMarked, X, LogOut, Calendar } from 'lucide-react';
 import Cookies from 'js-cookie';
 import { toast } from 'sonner';
 
@@ -63,6 +63,7 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
       presensi: false,
       penilaian: false,
       jurnal: false,
+      kalender: false,
     };
   });
 
@@ -130,6 +131,18 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
         >
           <Home className="w-5 h-5" />
           <span className="font-medium">Dashboard</span>
+        </Link>
+
+        <Link
+          href="/kalender"
+          className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
+            pathname === '/kalender'
+              ? 'bg-indigo-600 text-white shadow-md shadow-indigo-900/20'
+              : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+          }`}
+        >
+          <Calendar className="w-5 h-5" />
+          <span className="font-medium">Kalender</span>
         </Link>
 
         {menuGroups.map((group) => {

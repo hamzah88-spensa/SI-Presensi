@@ -226,6 +226,32 @@ export interface Database {
           created_at?: string
         }
       }
+      agendas: {
+        Row: {
+          id: string
+          title: string
+          start_date: string
+          end_date: string
+          category: 'Kegiatan' | 'Libur' | 'Sumatif Lingkup Materi' | 'Sumatif Akhir Semester' | 'Sumatif Akhir Tahun' | 'Sumatif Akhir Fase' | 'Lainnya'
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          title: string
+          start_date: string
+          end_date: string
+          category: 'Kegiatan' | 'Libur' | 'Sumatif Lingkup Materi' | 'Sumatif Akhir Semester' | 'Sumatif Akhir Tahun' | 'Sumatif Akhir Fase' | 'Lainnya'
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          title?: string
+          start_date?: string
+          end_date?: string
+          category?: 'Kegiatan' | 'Libur' | 'Sumatif Lingkup Materi' | 'Sumatif Akhir Semester' | 'Sumatif Akhir Tahun' | 'Sumatif Akhir Fase' | 'Lainnya'
+          created_at?: string
+        }
+      }
     }
   }
 }
