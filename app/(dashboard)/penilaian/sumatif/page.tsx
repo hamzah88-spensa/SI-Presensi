@@ -211,7 +211,35 @@ export default function PenilaianSumatifPage() {
     if (!selectedKelasId || !selectedTpId || !selectedTeknik || !activeSemester) return;
     
     const recordsToSave = Object.entries(sumatifData)
-      .filter(([_, record]) => record.nilai !== '') // Only save if nilai is filled
+      .filter(([siswaId, record]) => {
+        // 1. Only save if nilai is filled
+        if (record.nilai === '') return false;
+
+        // 2. Find existing record to compare
+        const existing = data.penilaianSumatif.find(p => 
+          p.siswaId === siswaId && 
+          p.tpId === selectedTpId && 
+          p.semesterId === activeSemester.id &&
+          p.teknik === selectedTeknik
+        );
+
+        // 3. If no existing record, it's new - save it
+        if (!existing) return true;
+
+        // 4. If existing, check if any field has changed
+        const hasNilaiChanged = Number(record.nilai) !== existing.nilai;
+        const hasRemedialChanged = (record.nilaiRemedial !== '' ? Number(record.nilaiRemedial) : null) !== (existing.nilaiRemedial ?? null);
+        
+        let hasDetailChanged = false;
+        if (selectedTeknik === 'Tes Tertulis') {
+          const hasJumlahChanged = (jumlahSoal || null) !== (existing.jumlahSoal ?? null);
+          const hasBobotChanged = JSON.stringify(bobotSoal) !== JSON.stringify(existing.bobotSoal || []);
+          const hasSkorChanged = JSON.stringify(skorSiswa[siswaId] || []) !== JSON.stringify(existing.skorDetail || []);
+          hasDetailChanged = hasJumlahChanged || hasBobotChanged || hasSkorChanged;
+        }
+
+        return hasNilaiChanged || hasRemedialChanged || hasDetailChanged;
+      })
       .map(([siswaId, record]) => ({
         id: record.id,
         siswaId,
@@ -225,7 +253,7 @@ export default function PenilaianSumatifPage() {
       }));
 
     if (recordsToSave.length === 0) {
-      alert('Silakan isi setidaknya satu nilai siswa sebelum menyimpan.');
+      alert('Tidak ada perubahan data untuk disimpan.');
       return;
     }
 

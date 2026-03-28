@@ -85,16 +85,39 @@ export default function PenilaianFormatifPage() {
   const handleSave = async () => {
     if (!selectedKelasId || !selectedTpId || !selectedTeknik || !activeSemester) return;
     
-    const recordsToSave = Object.entries(formatifData).map(([siswaId, record]) => ({
-      id: record.id,
-      siswaId,
-      tpId: selectedTpId,
-      teknik: selectedTeknik,
-      nilai: record.nilai,
-      umpanBalik: selectedTeknik === 'Observasi' ? record.umpanBalik : null,
-      halPenting: selectedTeknik === 'CATs' ? record.halPenting : null,
-      halBingung: selectedTeknik === 'CATs' ? record.halBingung : null
-    }));
+    const recordsToSave = Object.entries(formatifData)
+      .filter(([siswaId, record]) => {
+        const existing = data.penilaianFormatif.find(p => 
+          p.siswaId === siswaId && 
+          p.tpId === selectedTpId && 
+          p.semesterId === activeSemester.id &&
+          p.teknik === selectedTeknik
+        );
+
+        if (!existing) return true; // New record
+
+        const hasNilaiChanged = record.nilai !== existing.nilai;
+        const hasUmpanBalikChanged = (selectedTeknik === 'Observasi' ? record.umpanBalik : null) !== (existing.umpanBalik || null);
+        const hasHalPentingChanged = (selectedTeknik === 'CATs' ? record.halPenting : null) !== (existing.halPenting || null);
+        const hasHalBingungChanged = (selectedTeknik === 'CATs' ? record.halBingung : null) !== (existing.halBingung || null);
+
+        return hasNilaiChanged || hasUmpanBalikChanged || hasHalPentingChanged || hasHalBingungChanged;
+      })
+      .map(([siswaId, record]) => ({
+        id: record.id,
+        siswaId,
+        tpId: selectedTpId,
+        teknik: selectedTeknik,
+        nilai: record.nilai,
+        umpanBalik: selectedTeknik === 'Observasi' ? record.umpanBalik : null,
+        halPenting: selectedTeknik === 'CATs' ? record.halPenting : null,
+        halBingung: selectedTeknik === 'CATs' ? record.halBingung : null
+      }));
+
+    if (recordsToSave.length === 0) {
+      alert('Tidak ada perubahan data untuk disimpan.');
+      return;
+    }
 
     try {
       await savePenilaianFormatifBatch(recordsToSave);

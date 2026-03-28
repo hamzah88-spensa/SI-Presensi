@@ -302,22 +302,43 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const saveKehadiranBatch = async (records: { id?: string, date: string, siswaId: string, status: Kehadiran['status'], keterangan: string }[]) => {
     if (!activeSemester) return;
     try {
-      const upsertData = records.map(r => ({
-        ...(r.id ? { id: r.id } : {}),
-        date: r.date,
-        siswa_id: r.siswaId,
-        status: r.status,
-        keterangan: r.keterangan,
-        semester_id: activeSemester.id
-      }));
+      const inserts: any[] = [];
+      const updates: any[] = [];
+
+      records.forEach(r => {
+        const row: any = {
+          date: r.date,
+          siswa_id: r.siswaId,
+          status: r.status,
+          keterangan: r.keterangan,
+          semester_id: activeSemester.id
+        };
+        if (r.id) {
+          row.id = r.id;
+          updates.push(row);
+        } else {
+          inserts.push(row);
+        }
+      });
       
-      const { data: savedRecords, error } = await supabase.from('kehadiran').upsert(upsertData).select();
-      if (error) throw error;
+      let allSavedRecords: any[] = [];
+
+      if (inserts.length > 0) {
+        const { data: savedInserts, error: insertError } = await supabase.from('kehadiran').insert(inserts).select();
+        if (insertError) throw insertError;
+        if (savedInserts) allSavedRecords = [...allSavedRecords, ...savedInserts];
+      }
+
+      if (updates.length > 0) {
+        const { data: savedUpdates, error: updateError } = await supabase.from('kehadiran').upsert(updates).select();
+        if (updateError) throw updateError;
+        if (savedUpdates) allSavedRecords = [...allSavedRecords, ...savedUpdates];
+      }
       
-      if (savedRecords) {
+      if (allSavedRecords.length > 0) {
         setData(prev => {
           const newKehadiran = [...prev.kehadiran];
-          savedRecords.forEach(saved => {
+          allSavedRecords.forEach(saved => {
             const index = newKehadiran.findIndex(k => k.id === saved.id);
             const mapped = { id: saved.id, date: saved.date, siswaId: saved.siswa_id, status: saved.status, keterangan: saved.keterangan || '', semesterId: saved.semester_id };
             if (index >= 0) {
@@ -338,7 +359,10 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const savePenilaianFormatifBatch = async (records: { id?: string, siswaId: string, tpId: string, teknik: PenilaianFormatif['teknik'], nilai: PenilaianFormatif['nilai'], umpanBalik?: string | null, halPenting?: string | null, halBingung?: string | null }[]) => {
     if (!activeSemester) return;
     try {
-      const upsertData = records.map(r => {
+      const inserts: any[] = [];
+      const updates: any[] = [];
+
+      records.forEach(r => {
         const row: any = {
           siswa_id: r.siswaId,
           semester_id: activeSemester.id,
@@ -351,17 +375,30 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         };
         if (r.id) {
           row.id = r.id;
+          updates.push(row);
+        } else {
+          inserts.push(row);
         }
-        return row;
       });
 
-      const { data: savedRecords, error } = await supabase.from('penilaian_formatif').upsert(upsertData).select();
-      if (error) throw error;
+      let allSavedRecords: any[] = [];
 
-      if (savedRecords) {
+      if (inserts.length > 0) {
+        const { data: savedInserts, error: insertError } = await supabase.from('penilaian_formatif').insert(inserts).select();
+        if (insertError) throw insertError;
+        if (savedInserts) allSavedRecords = [...allSavedRecords, ...savedInserts];
+      }
+
+      if (updates.length > 0) {
+        const { data: savedUpdates, error: updateError } = await supabase.from('penilaian_formatif').upsert(updates).select();
+        if (updateError) throw updateError;
+        if (savedUpdates) allSavedRecords = [...allSavedRecords, ...savedUpdates];
+      }
+
+      if (allSavedRecords.length > 0) {
         setData(prev => {
           const newFormatif = [...prev.penilaianFormatif];
-          savedRecords.forEach(saved => {
+          allSavedRecords.forEach(saved => {
             const index = newFormatif.findIndex(p => p.id === saved.id);
             const mapped = { id: saved.id, siswaId: saved.siswa_id, semesterId: saved.semester_id, tpId: saved.tp_id, teknik: saved.teknik, nilai: saved.nilai, umpanBalik: saved.umpan_balik || undefined, halPenting: saved.hal_penting || undefined, halBingung: saved.hal_bingung || undefined };
             if (index >= 0) {
@@ -382,7 +419,10 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const savePenilaianSumatifBatch = async (records: { id?: string, siswaId: string, tpId: string, teknik: PenilaianSumatif['teknik'], nilai: number, nilaiRemedial?: number | null, jumlahSoal?: number | null, bobotSoal?: any | null, skorDetail?: any | null }[]) => {
     if (!activeSemester) return;
     try {
-      const upsertData = records.map(r => {
+      const inserts: any[] = [];
+      const updates: any[] = [];
+
+      records.forEach(r => {
         const row: any = {
           siswa_id: r.siswaId,
           semester_id: activeSemester.id,
@@ -396,17 +436,30 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         };
         if (r.id) {
           row.id = r.id;
+          updates.push(row);
+        } else {
+          inserts.push(row);
         }
-        return row;
       });
 
-      const { data: savedRecords, error } = await supabase.from('penilaian_sumatif').upsert(upsertData).select();
-      if (error) throw error;
+      let allSavedRecords: any[] = [];
 
-      if (savedRecords) {
+      if (inserts.length > 0) {
+        const { data: savedInserts, error: insertError } = await supabase.from('penilaian_sumatif').insert(inserts).select();
+        if (insertError) throw insertError;
+        if (savedInserts) allSavedRecords = [...allSavedRecords, ...savedInserts];
+      }
+
+      if (updates.length > 0) {
+        const { data: savedUpdates, error: updateError } = await supabase.from('penilaian_sumatif').upsert(updates).select();
+        if (updateError) throw updateError;
+        if (savedUpdates) allSavedRecords = [...allSavedRecords, ...savedUpdates];
+      }
+
+      if (allSavedRecords.length > 0) {
         setData(prev => {
           const newSumatif = [...prev.penilaianSumatif];
-          savedRecords.forEach(saved => {
+          allSavedRecords.forEach(saved => {
             const index = newSumatif.findIndex(p => p.id === saved.id);
             const mapped: PenilaianSumatif = { 
               id: saved.id, 

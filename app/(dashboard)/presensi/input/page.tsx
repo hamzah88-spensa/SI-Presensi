@@ -71,13 +71,33 @@ export default function InputPresensi() {
   const handleSave = async () => {
     if (!selectedDate || !selectedKelasId || !activeSemester) return;
     
-    const recordsToSave = Object.entries(attendanceData).map(([siswaId, record]) => ({
-      id: record.id,
-      date: selectedDate,
-      siswaId,
-      status: record.status,
-      keterangan: record.keterangan
-    }));
+    const recordsToSave = Object.entries(attendanceData)
+      .filter(([siswaId, record]) => {
+        const existing = data.kehadiran.find(k => 
+          k.siswaId === siswaId && 
+          k.date === selectedDate && 
+          k.semesterId === activeSemester.id
+        );
+
+        if (!existing) return true; // New record
+
+        const hasStatusChanged = record.status !== existing.status;
+        const hasKeteranganChanged = record.keterangan !== (existing.keterangan || '');
+
+        return hasStatusChanged || hasKeteranganChanged;
+      })
+      .map(([siswaId, record]) => ({
+        id: record.id,
+        date: selectedDate,
+        siswaId,
+        status: record.status,
+        keterangan: record.keterangan
+      }));
+
+    if (recordsToSave.length === 0) {
+      alert('Tidak ada perubahan data untuk disimpan.');
+      return;
+    }
 
     try {
       await saveKehadiranBatch(recordsToSave);
