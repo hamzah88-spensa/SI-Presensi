@@ -54,6 +54,8 @@ export default function KalenderPage() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingAgenda, setEditingAgenda] = useState<Agenda | null>(null);
+  const [holidays, setHolidays] = useState<any[]>([]);
+  const [isLoadingHolidays, setIsLoadingHolidays] = useState(false);
   
   // Form state
   const [formData, setFormData] = useState({
@@ -66,6 +68,32 @@ export default function KalenderPage() {
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(currentDate);
   const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd });
+
+  const currentYear = format(currentDate, 'yyyy');
+
+  // Fetch holidays
+  React.useEffect(() => {
+    const fetchHolidays = async () => {
+      setIsLoadingHolidays(true);
+      try {
+        const response = await fetch(`/api/holidays?year=${currentYear}`);
+        if (response.ok) {
+          const data = await response.json();
+          if (Array.isArray(data)) {
+            setHolidays(data);
+          } else if (data.error) {
+            console.error('Holiday API Error:', data.error);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch holidays:', error);
+      } finally {
+        setIsLoadingHolidays(false);
+      }
+    };
+
+    fetchHolidays();
+  }, [currentYear]);
 
   // Agendas for current month
   const monthAgendas = useMemo(() => {
@@ -80,6 +108,14 @@ export default function KalenderPage() {
     });
   }, [data.agendas, monthStart, monthEnd]);
 
+  // National holidays for current month
+  const monthHolidays = useMemo(() => {
+    return holidays.filter(h => {
+      const date = parseISO(h.tanggal);
+      return date >= monthStart && date <= monthEnd;
+    });
+  }, [holidays, monthStart, monthEnd]);
+
   // Calculations
   const stats = useMemo(() => {
     const totalDays = daysInMonth.length;
@@ -88,6 +124,8 @@ export default function KalenderPage() {
 
     daysInMonth.forEach(day => {
       const isDayWeekend = isWeekend(day);
+      const isNationalHoliday = holidays.some(h => isSameDay(day, parseISO(h.tanggal)));
+      
       const dayAgendas = monthAgendas.filter(a => 
         isWithinInterval(startOfDay(day), {
           start: startOfDay(parseISO(a.startDate)),
@@ -100,7 +138,7 @@ export default function KalenderPage() {
         ['Kegiatan', 'Sumatif Akhir Semester', 'Sumatif Akhir Tahun'].includes(a.category)
       );
 
-      if (isDayWeekend || isLiburAgenda) {
+      if (isDayWeekend || isLiburAgenda || isNationalHoliday) {
         liburCount++;
       } else if (isKegiatanOrSumatif) {
         hebSubtractions++;
@@ -111,7 +149,7 @@ export default function KalenderPage() {
     const heb = totalDays - (liburCount + hebSubtractions);
 
     return { totalDays, liburCount, hebSubtractions, hes, heb };
-  }, [daysInMonth, monthAgendas]);
+  }, [daysInMonth, monthAgendas, holidays]);
 
   const handlePrevMonth = () => setCurrentDate(subMonths(currentDate, 1));
   const handleNextMonth = () => setCurrentDate(addMonths(currentDate, 1));
@@ -187,6 +225,11 @@ export default function KalenderPage() {
             <h2 className="font-bold text-slate-800 flex items-center gap-2">
               <CalendarIcon className="w-5 h-5 text-indigo-500" />
               {format(currentDate, 'MMMM yyyy', { locale: id })}
+              {isLoadingHolidays && (
+                <span className="text-[10px] font-normal text-slate-400 animate-pulse">
+                  (Memuat Libur Nasional...)
+                </span>
+              )}
             </h2>
             <div className="flex items-center gap-2">
               <button 
@@ -225,6 +268,9 @@ export default function KalenderPage() {
 
               {daysInMonth.map((day) => {
                 const isDayWeekend = isWeekend(day);
+                const holiday = holidays.find(h => isSameDay(day, parseISO(h.tanggal)));
+                const isNationalHoliday = !!holiday;
+                
                 const dayAgendas = monthAgendas.filter(a => 
                   isWithinInterval(startOfDay(day), {
                     start: startOfDay(parseISO(a.startDate)),
@@ -235,12 +281,20 @@ export default function KalenderPage() {
                 return (
                   <div 
                     key={day.toString()} 
-                    className={`bg-white min-h-[100px] p-2 border-t border-l border-slate-100 transition-colors hover:bg-slate-50/50 relative ${isDayWeekend ? 'bg-red-50/30' : ''}`}
+                    className={`bg-white min-h-[100px] p-2 border-t border-l border-slate-100 transition-colors hover:bg-slate-50/50 relative ${isDayWeekend || isNationalHoliday ? 'bg-red-50/30' : ''}`}
                   >
-                    <span className={`text-sm font-medium ${isDayWeekend ? 'text-red-500' : 'text-slate-700'}`}>
+                    <span className={`text-sm font-medium ${isDayWeekend || isNationalHoliday ? 'text-red-500' : 'text-slate-700'}`}>
                       {format(day, 'd')}
                     </span>
                     <div className="mt-1 space-y-1">
+                      {isNationalHoliday && (
+                        <div 
+                          className="text-[10px] px-1.5 py-0.5 rounded border truncate bg-red-100 text-red-700 border-red-200 font-medium"
+                          title={holiday.keterangan}
+                        >
+                          {holiday.keterangan}
+                        </div>
+                      )}
                       {dayAgendas.map((agenda) => (
                         <div 
                           key={agenda.id}

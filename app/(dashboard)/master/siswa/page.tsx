@@ -37,10 +37,10 @@ export default function DataSiswa() {
 
   const handleEdit = (siswa: any) => {
     setEditingId(siswa.id);
-    setEditName(siswa.name);
-    setEditNisn(siswa.nisn);
-    setEditKelasId(siswa.kelasId);
-    setEditJk(siswa.jenisKelamin);
+    setEditName(siswa.name || '');
+    setEditNisn(siswa.nisn || '');
+    setEditKelasId(siswa.kelasId || '');
+    setEditJk(siswa.jenisKelamin || 'L');
   };
 
   const saveEdit = async () => {
