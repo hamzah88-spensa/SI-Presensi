@@ -59,8 +59,35 @@ export default function RekapJurnalPage() {
   };
 
   return (
-    <div className="space-y-6 print:space-y-0 print:m-0">
-      <div className="flex justify-between items-center print:hidden">
+    <div className="space-y-6">
+      <style>{`
+        @media print {
+          @page {
+            size: A4 portrait;
+            margin: 20mm 15mm;
+          }
+          body * {
+            visibility: hidden;
+          }
+          #print-area, #print-area * {
+            visibility: visible;
+          }
+          #print-area {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+          }
+          .no-print {
+            display: none !important;
+          }
+          thead {
+            display: table-header-group;
+          }
+        }
+      `}</style>
+
+      <div className="flex justify-between items-center no-print">
         <h1 className="text-2xl font-bold text-gray-800">Rekap Jurnal Mengajar</h1>
         <button
           onClick={handlePrint}
@@ -71,8 +98,8 @@ export default function RekapJurnalPage() {
         </button>
       </div>
 
-      <div className="bg-white/80 backdrop-blur shadow-lg rounded-2xl p-6 print:shadow-none print:p-0 print:bg-transparent">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 print:hidden">
+      <div className="bg-white/80 backdrop-blur shadow-lg rounded-2xl p-6 no-print">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Kelas</label>
             <select
@@ -105,28 +132,70 @@ export default function RekapJurnalPage() {
             />
           </div>
         </div>
+      </div>
 
-        {/* Print Header */}
-        <div className="hidden print:block mb-8 text-center">
-          <h1 className="text-2xl font-bold text-black uppercase tracking-wider">Laporan Jurnal Mengajar</h1>
-          <p className="text-gray-700 mt-2">
-            {kelasId ? `Kelas: ${data.kelas.find(k => k.id === kelasId)?.name}` : 'Semua Kelas'}
-          </p>
-          <p className="text-gray-700">
-            Periode: {startDate ? formatDate(startDate) : 'Awal'} s.d. {endDate ? formatDate(endDate) : 'Akhir'}
-          </p>
-          <div className="w-full h-[2px] bg-black mt-4"></div>
+      <div id="print-area" className="bg-white/80 backdrop-blur shadow-lg rounded-2xl p-6 print:shadow-none print:p-0 print:bg-transparent">
+        
+        {/* Kop Surat Resmi (Hanya tampil saat print) */}
+        <div className="hidden print:flex justify-between items-center border-b-2 border-black pb-2 mb-6">
+          {/* Placeholder untuk Logo Kiri */}
+          <div className="w-16 h-16 flex items-center justify-center border border-gray-300 rounded-full overflow-hidden">
+            <span className="text-[8px] text-center text-gray-500">Logo<br/>Kemdikbud</span>
+          </div>
+          
+          <div className="text-center flex-1 px-4">
+            <h1 className="text-xl font-bold uppercase tracking-wide">JURNAL MENGAJAR GURU</h1>
+            <h2 className="text-lg font-bold">SMP NEGERI 1 BIAU</h2>
+          </div>
+          
+          {/* Placeholder untuk Logo Kanan */}
+          <div className="w-16 h-16 flex items-center justify-center border border-gray-300 rounded-full overflow-hidden">
+            <span className="text-[8px] text-center text-gray-500">Logo<br/>Sekolah</span>
+          </div>
         </div>
 
-        <div className="overflow-x-auto pb-4 print:overflow-visible">
-          <table className="w-full text-sm text-left text-gray-800 min-w-max print:text-black">
+        {/* Informasi Tambahan (Hanya tampil saat print) */}
+        <div className="hidden print:grid grid-cols-2 gap-4 mb-6 text-sm">
+          <div>
+            <table className="w-full">
+              <tbody>
+                <tr>
+                  <td className="w-24 font-semibold py-1">Kelas</td>
+                  <td className="w-4 py-1">:</td>
+                  <td className="py-1">{kelasId ? data.kelas.find(k => k.id === kelasId)?.name : 'Semua Kelas'}</td>
+                </tr>
+                <tr>
+                  <td className="font-semibold py-1">Semester</td>
+                  <td className="py-1">:</td>
+                  <td className="py-1">{activeSemester?.name || '-'}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div>
+            <table className="w-full">
+              <tbody>
+                <tr>
+                  <td className="w-32 font-semibold py-1">Rentang Tanggal</td>
+                  <td className="w-4 py-1">:</td>
+                  <td className="py-1">
+                    {startDate ? formatDate(startDate) : 'Awal'} s.d. {endDate ? formatDate(endDate) : 'Akhir'}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div className="overflow-x-auto pb-4 print:overflow-visible print:pb-0">
+          <table className="w-full text-sm text-left text-gray-800 min-w-max print:text-black border-collapse">
             <thead className="text-xs text-gray-700 uppercase bg-gray-50 print:bg-gray-100 print:text-black">
               <tr>
-                <th className="px-4 py-3 border print:border-black w-12 text-center">No</th>
-                <th className="px-4 py-3 border print:border-black w-40">Tanggal & Kelas</th>
-                <th className="px-4 py-3 border print:border-black">Materi & Tujuan Pembelajaran</th>
-                <th className="px-4 py-3 border print:border-black">Catatan / Dinamika</th>
-                <th className="px-4 py-3 border print:border-black">Refleksi, Hambatan & Ketidakhadiran</th>
+                <th className="px-4 py-2 border print:border-black w-12 text-center">No</th>
+                <th className="px-4 py-2 border print:border-black w-40">Tanggal & Kelas</th>
+                <th className="px-4 py-2 border print:border-black">Materi & Tujuan Pembelajaran</th>
+                <th className="px-4 py-2 border print:border-black">Catatan / Dinamika</th>
+                <th className="px-4 py-2 border print:border-black">Refleksi, Hambatan & Ketidakhadiran</th>
               </tr>
             </thead>
             <tbody>
@@ -135,21 +204,21 @@ export default function RekapJurnalPage() {
                 const kelasName = data.kelas.find(k => k.id === parsed.kelasId)?.name || '-';
                 
                 return (
-                  <tr key={row.id} className="bg-white border-b hover:bg-gray-50 print:break-inside-avoid">
-                    <td className="px-4 py-4 border print:border-black text-center align-top">
+                  <tr key={row.id} className="bg-white hover:bg-gray-50 print:break-inside-avoid">
+                    <td className="px-4 py-3 border print:border-black text-center align-top">
                       {index + 1}
                     </td>
-                    <td className="px-4 py-4 border print:border-black font-medium align-top">
+                    <td className="px-4 py-3 border print:border-black font-medium align-top">
                       <div>{formatDate(row.date)}</div>
                       <div className="text-indigo-600 print:text-black font-bold mt-1">{kelasName}</div>
                     </td>
-                    <td className="px-4 py-4 border print:border-black whitespace-pre-wrap align-top">
+                    <td className="px-4 py-3 border print:border-black whitespace-pre-wrap align-top">
                       {parsed.materi || '-'}
                     </td>
-                    <td className="px-4 py-4 border print:border-black whitespace-pre-wrap align-top">
+                    <td className="px-4 py-3 border print:border-black whitespace-pre-wrap align-top">
                       {parsed.dinamika || '-'}
                     </td>
-                    <td className="px-4 py-4 border print:border-black whitespace-pre-wrap align-top">
+                    <td className="px-4 py-3 border print:border-black whitespace-pre-wrap align-top">
                       {parsed.refleksi && (
                         <div className="mb-2">
                           <span className="font-semibold">Refleksi:</span><br/>{parsed.refleksi}
@@ -190,7 +259,18 @@ export default function RekapJurnalPage() {
             </tbody>
           </table>
         </div>
+
+        {/* Tanda Tangan (Hanya tampil saat print) */}
+        <div className="hidden print:flex mt-12 justify-end">
+          <div className="text-center">
+            <p className="mb-[70px]">Guru Mata Pelajaran,</p>
+            <p className="font-bold underline">Hamzah, S.Pd</p>
+            <p>NIP. 198808172019031014</p>
+          </div>
+        </div>
+
       </div>
     </div>
   );
+
 }
