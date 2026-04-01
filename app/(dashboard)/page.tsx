@@ -29,9 +29,9 @@ export default function Dashboard() {
       <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 rounded-3xl p-8 text-white shadow-xl shadow-indigo-500/20 relative overflow-hidden">
         <div className="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 bg-white opacity-10 rounded-full blur-3xl"></div>
         <div className="relative z-10">
-          <h1 className="text-3xl font-bold mb-2">Selamat Datang di Sistem Akademik</h1>
+          <h1 className="text-3xl font-bold mb-2">Selamat Datang Hamzah, S.Pd</h1>
           <p className="text-indigo-100 max-w-2xl text-lg">
-            Kelola data kehadiran dan penilaian siswa dengan mudah. Anda sedang mengakses data untuk semester <span className="font-bold text-white">{activeSemester?.name || 'Belum dipilih'}</span>.
+            SIGMA (Sistem Integrasi Guru Modern Aktif), Kelola data kehadiran, penilaian siswa dan jurnal mengajar guru dengan mudah. Anda sedang mengakses data untuk semester <span className="font-bold text-white">{activeSemester?.name || 'Belum dipilih'}</span>.
           </p>
         </div>
       </div>

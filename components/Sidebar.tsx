@@ -110,8 +110,8 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
             <GraduationCap className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h1 className="font-bold text-lg leading-tight">SMP NEGERI 1 BIAU</h1>
-            <p className="text-xs text-slate-400">Sistem Kehadiran & Penilaian</p>
+            <h1 className="font-bold text-lg leading-tight">SIGMA</h1>
+            <p className="text-xs text-slate-400">SMP Negeri 1 Biau</p>
           </div>
         </div>
         {onClose && (
@@ -200,7 +200,7 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
           <span className="font-medium">Keluar</span>
         </button>
         <div className="text-xs text-slate-500 text-center">
-          &copy; 2026 Sistem Akademik
+          &copy; 2026 SIGMA V.1.1
         </div>
       </div>
     </div>

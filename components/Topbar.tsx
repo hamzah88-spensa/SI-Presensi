@@ -67,7 +67,7 @@ export function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
             A
           </div>
           <div className="hidden md:block">
-            <p className="text-sm font-medium text-slate-700 leading-none">Admin</p>
+            <p className="text-sm font-medium text-slate-700 leading-none">Hamzah, S.Pd</p>
             <p className="text-xs text-slate-500 mt-1">Administrator</p>
           </div>
         </div>

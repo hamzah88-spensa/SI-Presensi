@@ -135,7 +135,7 @@ export default function KalenderPage() {
 
       const isLiburAgenda = dayAgendas.some(a => a.category === 'Libur');
       const isKegiatanOrSumatif = dayAgendas.some(a => 
-        ['Kegiatan', 'Sumatif Akhir Semester', 'Sumatif Akhir Tahun'].includes(a.category)
+        ['Kegiatan', 'Sumatif Akhir Semester', 'Sumatif Akhir Tahun','Sumatif Akhir Fase'].includes(a.category)
       );
 
       if (isDayWeekend || isLiburAgenda || isNationalHoliday) {
