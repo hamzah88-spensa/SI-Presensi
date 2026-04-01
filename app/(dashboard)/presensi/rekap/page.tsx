@@ -41,9 +41,13 @@ export default function RekapPresensiPage() {
         }
       });
 
+      const totalHari = rekap.Hadir + rekap.Izin + rekap.Sakit + rekap.Alpa + rekap.Bolos;
+      const persentase = totalHari > 0 ? Math.round((rekap.Hadir / totalHari) * 100) : 0;
+
       return {
         ...siswa,
-        rekap
+        rekap,
+        persentase
       };
     });
   }, [filteredSiswa, data.kehadiran, selectedKelas, startDate, endDate, activeSemester]);
@@ -125,6 +129,7 @@ export default function RekapPresensiPage() {
                   <th className="px-6 py-3 text-center">Izin</th>
                   <th className="px-6 py-3 text-center">Alpa</th>
                   <th className="px-6 py-3 text-center">Bolos</th>
+                  <th className="px-6 py-3 text-center">Persentase</th>
                   <th className="px-6 py-3 text-center">Aksi</th>
                 </tr>
               </thead>
@@ -139,6 +144,20 @@ export default function RekapPresensiPage() {
                     <td className="px-6 py-4 text-center text-yellow-600 font-semibold">{row.rekap.Izin}</td>
                     <td className="px-6 py-4 text-center text-red-600 font-semibold">{row.rekap.Alpa}</td>
                     <td className="px-6 py-4 text-center text-purple-600 font-semibold">{row.rekap.Bolos}</td>
+                    <td className="px-6 py-4 text-center">
+                      <div className="flex items-center justify-center gap-2">
+                        <div className="w-12 bg-gray-200 rounded-full h-2">
+                          <div 
+                            className={`h-2 rounded-full ${
+                              row.persentase >= 90 ? 'bg-green-500' : 
+                              row.persentase >= 75 ? 'bg-yellow-500' : 'bg-red-500'
+                            }`}
+                            style={{ width: `${row.persentase}%` }}
+                          ></div>
+                        </div>
+                        <span className="font-bold text-gray-700">{row.persentase}%</span>
+                      </div>
+                    </td>
                     <td className="px-6 py-4 text-center">
                       <button
                         onClick={() => setSelectedStudentDetail(row.id)}

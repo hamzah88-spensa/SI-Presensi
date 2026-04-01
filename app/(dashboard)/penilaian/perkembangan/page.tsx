@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { useData } from '@/lib/data-context';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { Calendar, FileText, TrendingUp, AlertCircle } from 'lucide-react';
 
 export default function PerkembanganSiswaPage() {
@@ -184,26 +184,70 @@ export default function PerkembanganSiswaPage() {
                 
                 {presensiSiswa && (
                   <>
-                    <div className="grid grid-cols-5 gap-2 mb-6">
-                      <div className="bg-green-50 p-3 rounded-xl text-center">
-                        <div className="text-2xl font-bold text-green-600">{presensiSiswa.summary.Hadir}</div>
-                        <div className="text-xs text-green-800 font-medium">Hadir</div>
+                    <div className="flex flex-col md:flex-row items-center gap-6 mb-6">
+                      <div className="w-full md:w-1/2 h-[200px]">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie
+                              data={[
+                                { name: 'Hadir', value: presensiSiswa.summary.Hadir, color: '#22c55e' },
+                                { name: 'Izin', value: presensiSiswa.summary.Izin, color: '#3b82f6' },
+                                { name: 'Sakit', value: presensiSiswa.summary.Sakit, color: '#eab308' },
+                                { name: 'Alpa', value: presensiSiswa.summary.Alpa, color: '#ef4444' },
+                                { name: 'Bolos', value: presensiSiswa.summary.Bolos, color: '#a855f7' },
+                              ].filter(d => d.value > 0)}
+                              cx="50%"
+                              cy="50%"
+                              innerRadius={60}
+                              outerRadius={80}
+                              paddingAngle={5}
+                              dataKey="value"
+                            >
+                              {[
+                                { name: 'Hadir', color: '#22c55e' },
+                                { name: 'Izin', color: '#3b82f6' },
+                                { name: 'Sakit', color: '#eab308' },
+                                { name: 'Alpa', color: '#ef4444' },
+                                { name: 'Bolos', color: '#a855f7' },
+                              ].map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={entry.color} />
+                              ))}
+                            </Pie>
+                            <Tooltip />
+                          </PieChart>
+                        </ResponsiveContainer>
+                        <div className="text-center -mt-28 mb-20">
+                          <div className="text-2xl font-bold text-gray-800">
+                            {(() => {
+                              const total = Object.values(presensiSiswa.summary).reduce((a, b) => a + b, 0);
+                              return total > 0 ? Math.round((presensiSiswa.summary.Hadir / total) * 100) : 0;
+                            })()}%
+                          </div>
+                          <div className="text-xs text-gray-500 uppercase font-medium">Kehadiran</div>
+                        </div>
                       </div>
-                      <div className="bg-blue-50 p-3 rounded-xl text-center">
-                        <div className="text-2xl font-bold text-blue-600">{presensiSiswa.summary.Izin}</div>
-                        <div className="text-xs text-blue-800 font-medium">Izin</div>
-                      </div>
-                      <div className="bg-yellow-50 p-3 rounded-xl text-center">
-                        <div className="text-2xl font-bold text-yellow-600">{presensiSiswa.summary.Sakit}</div>
-                        <div className="text-xs text-yellow-800 font-medium">Sakit</div>
-                      </div>
-                      <div className="bg-red-50 p-3 rounded-xl text-center">
-                        <div className="text-2xl font-bold text-red-600">{presensiSiswa.summary.Alpa}</div>
-                        <div className="text-xs text-red-800 font-medium">Alpa</div>
-                      </div>
-                      <div className="bg-purple-50 p-3 rounded-xl text-center">
-                        <div className="text-2xl font-bold text-purple-600">{presensiSiswa.summary.Bolos}</div>
-                        <div className="text-xs text-purple-800 font-medium">Bolos</div>
+                      
+                      <div className="grid grid-cols-2 gap-3 w-full md:w-1/2">
+                        <div className="bg-green-50 p-3 rounded-xl border border-green-100">
+                          <div className="text-xs text-green-600 font-medium uppercase tracking-wider">Hadir</div>
+                          <div className="text-xl font-bold text-green-700">{presensiSiswa.summary.Hadir}</div>
+                        </div>
+                        <div className="bg-blue-50 p-3 rounded-xl border border-blue-100">
+                          <div className="text-xs text-blue-600 font-medium uppercase tracking-wider">Izin</div>
+                          <div className="text-xl font-bold text-blue-700">{presensiSiswa.summary.Izin}</div>
+                        </div>
+                        <div className="bg-yellow-50 p-3 rounded-xl border border-yellow-100">
+                          <div className="text-xs text-yellow-600 font-medium uppercase tracking-wider">Sakit</div>
+                          <div className="text-xl font-bold text-yellow-700">{presensiSiswa.summary.Sakit}</div>
+                        </div>
+                        <div className="bg-red-50 p-3 rounded-xl border border-red-100">
+                          <div className="text-xs text-red-600 font-medium uppercase tracking-wider">Alpa</div>
+                          <div className="text-xl font-bold text-red-700">{presensiSiswa.summary.Alpa}</div>
+                        </div>
+                        <div className="bg-purple-50 p-3 rounded-xl border border-purple-100 col-span-2">
+                          <div className="text-xs text-purple-600 font-medium uppercase tracking-wider text-center">Bolos</div>
+                          <div className="text-xl font-bold text-purple-700 text-center">{presensiSiswa.summary.Bolos}</div>
+                        </div>
                       </div>
                     </div>
 

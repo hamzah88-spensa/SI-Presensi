@@ -110,8 +110,8 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
             <GraduationCap className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h1 className="font-bold text-lg leading-tight">Sistem Akademik</h1>
-            <p className="text-xs text-slate-400">Kehadiran & Penilaian</p>
+            <h1 className="font-bold text-lg leading-tight">SMP NEGERI 1 BIAU</h1>
+            <p className="text-xs text-slate-400">Sistem Kehadiran & Penilaian</p>
           </div>
         </div>
         {onClose && (
