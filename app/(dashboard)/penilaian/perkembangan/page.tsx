@@ -164,7 +164,6 @@ export default function PerkembanganSiswaPage() {
                       formatter={(value: any, name: any) => [value, name]}
 
 
-
                       labelFormatter={(label, payload) => {
                         if (payload && payload.length > 0) {
                           return payload[0].payload.fullName;
@@ -172,7 +171,6 @@ export default function PerkembanganSiswaPage() {
                         return label;
                       }}
                     />
-
 
 
 
@@ -388,3 +386,4 @@ export default function PerkembanganSiswaPage() {
     </div>
   );
 }
+
