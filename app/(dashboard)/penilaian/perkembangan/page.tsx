@@ -156,8 +156,15 @@ export default function PerkembanganSiswaPage() {
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="name" />
                     <YAxis domain={[0, 100]} />
+
+////////UBAH
+
+                    
                     <Tooltip 
-                      formatter={(value: any, name: any) => [value, name === 'kktp' ? 'KKTP' : name === 'nilai' ? 'Nilai Sumatif' : 'Nilai Remedial']}
+                      formatter={(value: any, name: any) => [value, name]}
+
+
+
                       labelFormatter={(label, payload) => {
                         if (payload && payload.length > 0) {
                           return payload[0].payload.fullName;
@@ -165,6 +172,12 @@ export default function PerkembanganSiswaPage() {
                         return label;
                       }}
                     />
+
+
+
+
+
+
                     <Legend />
                     <Line type="monotone" dataKey="kktp" stroke="#ef4444" name="KKTP" strokeWidth={2} strokeDasharray="5 5" />
                     <Line type="monotone" dataKey="nilai" stroke="#3b82f6" name="Nilai Sumatif" strokeWidth={2} activeDot={{ r: 8 }} />
