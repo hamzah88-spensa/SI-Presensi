@@ -134,7 +134,9 @@ export default function NilaiAkhirPage() {
                       const bestScore = Math.max(s.nilai, s.nilaiRemedial || 0);
                       sumNilai += bestScore;
                       sumatifCount++;
-                      tpDetails.push({ tpName: tp.name, score: bestScore, kktp: tp.kktp, tuntas: bestScore >= tp.kktp });
+                      tpDetails.push({ tpName: tp.name, score: bestScore, kktp: tp.kktp, tuntas: bestScore >= tp.kktp, hasNilai: true });
+                    } else {
+                      tpDetails.push({ tpName: tp.name, score: 0, kktp: tp.kktp, tuntas: false, hasNilai: false });
                     }
                   });
 
@@ -172,8 +174,8 @@ export default function NilaiAkhirPage() {
                           {tpDetails.length > 0 ? tpDetails.map((td, i) => (
                             <div key={i} className="flex justify-between items-center w-full max-w-[200px] text-xs">
                               <span className="truncate mr-2 text-slate-600" title={td.tpName}>TP {i+1}</span>
-                              <span className={`px-2 py-0.5 rounded font-medium ${td.tuntas ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
-                                {td.tuntas ? 'Lulus' : 'Tidak Lulus'}
+                              <span className={`px-2 py-0.5 rounded font-medium ${!td.hasNilai ? 'bg-slate-100 text-slate-500' : td.tuntas ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
+                                {!td.hasNilai ? 'Belum Dinilai' : td.tuntas ? 'Lulus' : 'Tidak Lulus'}
                               </span>
                             </div>
                           )) : (
@@ -261,7 +263,9 @@ export default function NilaiAkhirPage() {
                       <div key={idx} className="flex justify-between items-center text-sm p-3 bg-slate-50 border border-slate-100 rounded-lg">
                         <span className="text-slate-700 w-2/3 leading-snug">{tp.tpName}</span>
                         <div className="flex flex-col items-end">
-                          <span className={`font-bold text-lg ${tp.tuntas ? 'text-emerald-600' : 'text-rose-600'}`}>{tp.score}</span>
+                          <span className={`font-bold text-lg ${!tp.hasNilai ? 'text-slate-400 text-sm' : tp.tuntas ? 'text-emerald-600' : 'text-rose-600'}`}>
+                            {!tp.hasNilai ? '-' : tp.score}
+                          </span>
                           <span className="text-[10px] text-slate-400">KKTP {tp.kktp}</span>
                         </div>
                       </div>
