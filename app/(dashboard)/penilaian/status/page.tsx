@@ -125,6 +125,7 @@ export default function StatusNilaiPage() {
               <tr className="bg-slate-50 border-b border-slate-200">
                 <th className="px-6 py-4 text-sm font-semibold text-slate-700 sticky left-0 bg-slate-50 z-10 border-r border-slate-200">No</th>
                 <th className="px-6 py-4 text-sm font-semibold text-slate-700 sticky left-[52px] bg-slate-50 z-10 border-r border-slate-200 min-w-[200px]">Nama Siswa</th>
+                <th className="px-6 py-4 text-sm font-semibold text-slate-700 text-center min-w-[150px] border-r border-slate-200">Rekap Absensi</th>
                 {filteredTPs.map((tp, idx) => (
                   <th key={tp.id} className="px-4 py-4 text-sm font-semibold text-slate-700 text-center min-w-[120px]">
                     <div className="flex flex-col items-center">
@@ -139,13 +140,33 @@ export default function StatusNilaiPage() {
             </thead>
               <tbody className="divide-y divide-slate-100">
               {filteredSiswa.length > 0 ? (
-                filteredSiswa.map((siswa, index) => (
+                filteredSiswa.map((siswa, index) => {
+                  const kehadiran = data.kehadiran.filter(k => k.siswaId === siswa.id && k.semesterId === activeSemester?.id);
+                  let totalH = 0, totalI = 0, totalS = 0, totalA = 0, totalB = 0;
+                  kehadiran.forEach(k => {
+                    if (k.status === 'Hadir') totalH++;
+                    else if (k.status === 'Izin') totalI++;
+                    else if (k.status === 'Sakit') totalS++;
+                    else if (k.status === 'Alpa') totalA++;
+                    else if (k.status === 'Bolos') totalB++;
+                  });
+
+                  return (
                   <tr key={siswa.id} className="hover:bg-slate-50/50 transition-colors">
                     <td className="px-6 py-4 text-sm text-slate-600 sticky left-0 bg-white z-10 border-r border-slate-100">{index + 1}</td>
                     <td className="px-6 py-4 text-sm font-medium text-slate-900 sticky left-[52px] bg-white z-10 border-r border-slate-100">
                       <div className="flex flex-col">
                         <span>{siswa.name}</span>
                         <span className="text-xs text-slate-400">{siswa.nisn}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-xs font-semibold text-center border-r border-slate-100">
+                      <div className="flex justify-center gap-2">
+                        <span className="text-emerald-500">H: {totalH}</span>
+                        <span className="text-blue-500">I: {totalI}</span>
+                        <span className="text-amber-500">S: {totalS}</span>
+                        <span className="text-rose-500">A: {totalA}</span>
+                        <span className="text-purple-500">B: {totalB}</span>
                       </div>
                     </td>
                     {filteredTPs.map((tp) => {
@@ -183,10 +204,11 @@ export default function StatusNilaiPage() {
                       </button>
                     </td>
                   </tr>
-                ))
+                );
+                })
               ) : (
                 <tr>
-                  <td colSpan={filteredTPs.length + 3} className="px-6 py-12 text-center text-slate-400">
+                  <td colSpan={filteredTPs.length + 4} className="px-6 py-12 text-center text-slate-400">
                     {selectedKelas ? 'Tidak ada data siswa di kelas ini.' : 'Pilih kelas untuk menampilkan data.'}
                   </td>
                 </tr>

@@ -6,7 +6,7 @@ import { Plus, Trash2, FileText, Edit2, Save, AlertCircle, TrendingUp } from 'lu
 import { toast } from 'sonner';
 
 export default function PenilaianSumatifPage() {
-  const { data, activeSemester, savePenilaianSumatifBatch } = useData();
+  const { data, activeSemester, savePenilaianSumatifBatch, addCatatanKognitif } = useData();
   
   // Form states
   const [selectedKelasId, setSelectedKelasId] = useState('');
@@ -24,6 +24,7 @@ export default function PenilaianSumatifPage() {
     nilai: number | '',
     nilaiRemedial?: number | ''
   }>>({});
+  const [catatanData, setCatatanData] = useState<Record<string, string>>({});
   const [isDataExists, setIsDataExists] = useState(false);
 
   // When class, TP, or Teknik changes, load students and existing data
@@ -76,6 +77,7 @@ export default function PenilaianSumatifPage() {
 
     setTimeout(() => {
       setSumatifData(newSumatifData);
+      setCatatanData({});
       setIsDataExists(existingRecords.length > 0);
       
       if (existingRecords.length > 0 && selectedTeknik === 'Tes Tertulis') {
@@ -202,6 +204,13 @@ export default function PenilaianSumatifPage() {
     }));
   };
 
+  const handleCatatanChange = (siswaId: string, val: string) => {
+    setCatatanData(prev => ({
+      ...prev,
+      [siswaId]: val
+    }));
+  };
+
   const studentsInClass = data.siswa.filter(s => s.kelasId === selectedKelasId);
   const selectedTp = data.tujuanPembelajaran.find(tp => tp.id === selectedTpId);
 
@@ -280,14 +289,26 @@ export default function PenilaianSumatifPage() {
         skorDetail: selectedTeknik === 'Tes Tertulis' ? (skorSiswa[siswaId] || []) : null
       }));
 
-    if (recordsToSave.length === 0) {
-      toast.info('Tidak ada perubahan data untuk disimpan.');
+    if (recordsToSave.length === 0 && Object.values(catatanData).every(c => !c.trim())) {
+      toast.info('Tidak ada perubahan data atau catatan untuk disimpan.');
       return;
     }
 
     try {
-      await savePenilaianSumatifBatch(recordsToSave);
-      toast.success('Data penilaian sumatif berhasil disimpan.');
+      if (recordsToSave.length > 0) {
+        await savePenilaianSumatifBatch(recordsToSave);
+      }
+      
+      // Save Catatan
+      const catatanPromises = Object.entries(catatanData).map(async ([siswaId, catatan]) => {
+        if (catatan.trim()) {
+          await addCatatanKognitif(siswaId, selectedTpId, catatan.trim());
+        }
+      });
+      await Promise.all(catatanPromises);
+      setCatatanData({}); // clear form after saving
+
+      toast.success('Data dan catatan berhasil disimpan.');
       setIsDataExists(true);
     } catch (error) {
       toast.error('Terjadi kesalahan saat menyimpan data.');
@@ -423,12 +444,13 @@ export default function PenilaianSumatifPage() {
                         <th className="px-6 py-4 font-medium border-b border-slate-100 w-32 text-center whitespace-nowrap">Nilai Akhir</th>
                         <th className="px-6 py-4 font-medium border-b border-slate-100 w-32 text-center whitespace-nowrap">Status</th>
                         <th className="px-6 py-4 font-medium border-b border-slate-100 w-40 text-center whitespace-nowrap">Nilai Remedial</th>
+                        <th className="px-6 py-4 font-medium border-b border-slate-100 min-w-[250px] whitespace-nowrap">Catatan Kognitif (Baru)</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
                       {studentsInClass.length === 0 ? (
                         <tr>
-                          <td colSpan={selectedTeknik === 'Tes Tertulis' && jumlahSoal > 0 ? 5 + jumlahSoal : 5} className="px-6 py-8 text-center text-slate-400">
+                          <td colSpan={selectedTeknik === 'Tes Tertulis' && jumlahSoal > 0 ? 6 + jumlahSoal : 6} className="px-6 py-8 text-center text-slate-400">
                             Belum ada siswa di kelas ini.
                           </td>
                         </tr>
@@ -485,6 +507,21 @@ export default function PenilaianSumatifPage() {
                                   disabled={!isRemedial}
                                   className={`w-full px-3 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-pink-500/20 focus:border-pink-500 transition-all text-sm text-center ${!isRemedial ? 'bg-slate-100 cursor-not-allowed border-slate-200' : 'border-slate-200 bg-white'}`}
                                 />
+                              </td>
+                              <td className="px-6 py-4">
+                                <textarea
+                                  value={catatanData[siswa.id] || ''}
+                                  onChange={(e) => handleCatatanChange(siswa.id, e.target.value)}
+                                  placeholder="Ketik catatan baru..."
+                                  rows={1}
+                                  className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-pink-500/20 focus:border-pink-500 transition-all text-sm min-h-[40px] resize-y bg-white"
+                                />
+                                {(() => {
+                                  const riwayatCount = data.catatanKognitif?.filter(c => c.siswaId === siswa.id && c.semesterId === activeSemester?.id && c.tpId === selectedTpId).length || 0;
+                                  return riwayatCount > 0 ? (
+                                    <p className="mt-1 text-[10px] text-slate-400 font-medium">Terdapat {riwayatCount} catatan sebelumnya</p>
+                                  ) : null;
+                                })()}
                               </td>
                             </tr>
                           );

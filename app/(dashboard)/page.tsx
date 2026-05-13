@@ -16,6 +16,7 @@ export default function Dashboard() {
       const saved = localStorage.getItem(`tindakan_siswa_${activeSemester.id}`);
       if (saved) {
         try {
+          // eslint-disable-next-line react-hooks/set-state-in-effect
           setTindakanData(JSON.parse(saved));
         } catch (e) {
           console.error('Failed to parse tindakan data', e);

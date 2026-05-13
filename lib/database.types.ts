@@ -200,6 +200,32 @@ export interface Database {
           created_at?: string
         }
       }
+      catatan_kognitif: {
+        Row: {
+          id: string
+          siswa_id: string
+          semester_id: string
+          tp_id: string
+          catatan: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          siswa_id: string
+          semester_id: string
+          tp_id: string
+          catatan: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          siswa_id?: string
+          semester_id?: string
+          tp_id?: string
+          catatan?: string
+          created_at?: string
+        }
+      }
       jurnal: {
         Row: {
           id: string

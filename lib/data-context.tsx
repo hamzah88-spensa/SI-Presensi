@@ -11,6 +11,7 @@ type DbTP = Database['public']['Tables']['tujuan_pembelajaran']['Row'];
 type DbKehadiran = Database['public']['Tables']['kehadiran']['Row'];
 type DbPenilaianFormatif = Database['public']['Tables']['penilaian_formatif']['Row'];
 type DbPenilaianSumatif = Database['public']['Tables']['penilaian_sumatif']['Row'];
+type DbCatatanKognitif = Database['public']['Tables']['catatan_kognitif']['Row'];
 type DbJurnal = Database['public']['Tables']['jurnal']['Row'];
 type DbAgenda = Database['public']['Tables']['agendas']['Row'];
 
@@ -21,6 +22,7 @@ export type TujuanPembelajaran = { id: string; name: string; kktp: number; jenja
 export type Kehadiran = { id: string; date: string; siswaId: string; status: 'Hadir' | 'Izin' | 'Sakit' | 'Alpa' | 'Bolos'; keterangan: string; semesterId: string };
 export type PenilaianFormatif = { id: string; siswaId: string; semesterId: string; tpId: string; teknik: 'Observasi' | 'CATs' | 'Exit Ticket'; nilai: 'SB' | 'B' | 'C' | 'PB'; umpanBalik?: string; halPenting?: string; halBingung?: string };
 export type PenilaianSumatif = { id: string; siswaId: string; semesterId: string; tpId: string; teknik: 'Tes Tertulis' | 'Kinerja' | 'Proyek'; nilai: number; nilaiRemedial?: number; jumlahSoal?: number; bobotSoal?: any; skorDetail?: any };
+export type CatatanKognitif = { id: string; siswaId: string; semesterId: string; tpId: string; catatan: string; createdAt: string };
 export type Jurnal = { id: string; date: string; type: 'Mengajar' | 'Refleksi'; content: string; semesterId: string };
 export type Agenda = { id: string; title: string; startDate: string; endDate: string; category: 'Kegiatan' | 'Libur' | 'Sumatif Lingkup Materi' | 'Sumatif Akhir Semester' | 'Sumatif Akhir Tahun' | 'Sumatif Akhir Fase' | 'Lainnya' };
 
@@ -32,6 +34,7 @@ type AppData = {
   kehadiran: Kehadiran[];
   penilaianFormatif: PenilaianFormatif[];
   penilaianSumatif: PenilaianSumatif[];
+  catatanKognitif: CatatanKognitif[];
   jurnal: Jurnal[];
   agendas: Agenda[];
 };
@@ -44,6 +47,7 @@ const defaultData: AppData = {
   kehadiran: [],
   penilaianFormatif: [],
   penilaianSumatif: [],
+  catatanKognitif: [],
   jurnal: [],
   agendas: [],
 };
@@ -71,6 +75,7 @@ type DataContextType = {
   addPenilaianSumatif: (siswaId: string, tpId: string, teknik: PenilaianSumatif['teknik'], nilai: number) => Promise<void>;
   updatePenilaianSumatif: (id: string, updates: Partial<PenilaianSumatif>) => Promise<void>;
   savePenilaianSumatifBatch: (records: { id?: string, siswaId: string, tpId: string, teknik: PenilaianSumatif['teknik'], nilai: number, nilaiRemedial?: number | null, jumlahSoal?: number | null, bobotSoal?: any | null, skorDetail?: any | null }[]) => Promise<void>;
+  addCatatanKognitif: (siswaId: string, tpId: string, catatan: string) => Promise<void>;
   addJurnal: (date: string, type: Jurnal['type'], content: string) => Promise<void>;
   updateJurnal: (id: string, updates: Partial<Jurnal>) => Promise<void>;
   addAgenda: (title: string, startDate: string, endDate: string, category: Agenda['category']) => Promise<void>;
@@ -106,6 +111,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         { data: kehadiran },
         { data: formatif },
         { data: sumatif },
+        { data: catatanKognitif },
         { data: jurnal },
         { data: agendas }
       ] = await Promise.all([
@@ -116,6 +122,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         supabase.from('kehadiran').select('*').order('date', { ascending: false }),
         supabase.from('penilaian_formatif').select('*').order('created_at', { ascending: false }),
         supabase.from('penilaian_sumatif').select('*').order('created_at', { ascending: false }),
+        supabase.from('catatan_kognitif').select('*').order('created_at', { ascending: true }),
         supabase.from('jurnal').select('*').order('date', { ascending: false }),
         supabase.from('agendas').select('*').order('start_date', { ascending: true }),
       ]);
@@ -139,6 +146,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
           bobotSoal: (s.bobot_soal as number[]) ?? undefined, 
           skorDetail: (s.skor_detail as number[]) ?? undefined 
         })),
+        catatanKognitif: (catatanKognitif || []).map(c => ({ id: c.id, siswaId: c.siswa_id, semesterId: c.semester_id, tpId: c.tp_id, catatan: c.catatan, createdAt: c.created_at })),
         jurnal: (jurnal || []).map(j => ({ id: j.id, date: j.date, type: j.type, content: j.content, semesterId: j.semester_id })),
         agendas: (agendas || []).map(a => ({ id: a.id, title: a.title, startDate: a.start_date, endDate: a.end_date, category: a.category })),
       });
@@ -497,6 +505,27 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       throw error;
     }
   };
+  const addCatatanKognitif = async (siswaId: string, tpId: string, catatan: string) => {
+    if (!activeSemester) return;
+    try {
+      const { data: newCatatan, error } = await supabase.from('catatan_kognitif').insert([{
+        siswa_id: siswaId,
+        tp_id: tpId,
+        semester_id: activeSemester.id,
+        catatan: catatan
+      }]).select().single();
+      if (error) throw error;
+      if (newCatatan) {
+        setData(prev => ({
+          ...prev,
+          catatanKognitif: [...prev.catatanKognitif, { id: newCatatan.id, siswaId: newCatatan.siswa_id, semesterId: newCatatan.semester_id, tpId: newCatatan.tp_id, catatan: newCatatan.catatan, createdAt: newCatatan.created_at }]
+        }));
+      }
+    } catch (error) {
+      console.error('Error adding catatan kognitif:', error);
+    }
+  };
+
   const addKehadiran = async (date: string, siswaId: string, status: Kehadiran['status'], keterangan?: string) => {
     if (!activeSemester) return;
     try {
@@ -778,6 +807,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         addPenilaianSumatif,
         updatePenilaianSumatif,
         savePenilaianSumatifBatch,
+        addCatatanKognitif,
         addJurnal,
         updateJurnal,
         addAgenda,
