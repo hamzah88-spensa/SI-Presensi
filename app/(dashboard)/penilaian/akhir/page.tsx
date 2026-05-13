@@ -31,7 +31,7 @@ export default function NilaiAkhirPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 no-print">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 print:hidden">
         <div>
           <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
             <BookOpen className="w-6 h-6 text-fuchsia-500" />
@@ -50,7 +50,7 @@ export default function NilaiAkhirPage() {
         </button>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 no-print">
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 print:hidden">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <label className="text-sm font-medium text-slate-700 flex items-center gap-2">
@@ -85,27 +85,26 @@ export default function NilaiAkhirPage() {
       </div>
 
       {/* Print Header */}
-      <div className="hidden print:block mb-6">
-        <h1 className="text-xl font-bold text-center">NILAI AKHIR & PERKEMBANGAN SISWA</h1>
-        <h2 className="text-lg font-semibold text-center uppercase">{currentKelasName}</h2>
+      <div className="hidden print:block mb-6 pt-4">
+        <h1 className="text-xl font-bold text-center text-slate-900">Data Nilai Akhir berdasarkan kelas {currentKelasName !== 'Semua Kelas' ? currentKelasName : 'Semua'}</h1>
         <p className="text-center text-sm text-slate-500 mt-1">Semester: {activeSemester?.name || '-'}</p>
         <div className="mt-4 border-b-2 border-slate-900"></div>
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden print:border-0 print:shadow-none">
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto print:overflow-visible">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-slate-50 border-b border-slate-200">
-                <th className="px-6 py-4 text-sm font-semibold text-slate-700 w-16 border-r border-slate-200 text-center">No</th>
-                <th className="px-6 py-4 text-sm font-semibold text-slate-700 border-r border-slate-200 min-w-[200px]">Nama Siswa</th>
-                <th className="px-6 py-4 text-sm font-semibold text-slate-700 w-32 border-r border-slate-200 text-center">Nilai Akhir</th>
-                <th className="px-6 py-4 text-sm font-semibold text-slate-700 w-32 border-r border-slate-200 text-center">% Kehadiran</th>
-                <th className="px-6 py-4 text-sm font-semibold text-slate-700 border-r border-slate-200 min-w-[250px] text-center">Status Lulus/Tidak Lulus per TP</th>
-                <th className="px-6 py-4 text-sm font-semibold text-slate-700 w-24 text-center no-print">Aksi</th>
+              <tr className="bg-slate-50 border-b border-slate-200 print:bg-transparent">
+                <th className="px-6 py-4 text-sm font-semibold text-slate-700 w-16 border-r border-slate-200 text-center print:border-slate-300">No</th>
+                <th className="px-6 py-4 text-sm font-semibold text-slate-700 border-r border-slate-200 min-w-[200px] print:border-slate-300">Nama Siswa</th>
+                <th className="px-6 py-4 text-sm font-semibold text-slate-700 w-32 border-r border-slate-200 text-center print:border-slate-300">Nilai Akhir</th>
+                <th className="px-6 py-4 text-sm font-semibold text-slate-700 w-32 border-r border-slate-200 text-center print:border-slate-300">% Kehadiran</th>
+                <th className="px-6 py-4 text-sm font-semibold text-slate-700 border-r border-slate-200 min-w-[250px] text-center print:border-slate-300">Status Lulus/Tidak Lulus per TP</th>
+                <th className="px-6 py-4 text-sm font-semibold text-slate-700 w-24 text-center print:hidden">Aksi</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-slate-100 print:divide-slate-300">
               {filteredSiswa.length > 0 ? (
                 filteredSiswa.map((siswa, idx) => {
                   // Calculate Kehadiran
@@ -182,7 +181,7 @@ export default function NilaiAkhirPage() {
                           )}
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-center no-print">
+                      <td className="px-6 py-4 text-center print:hidden">
                         <button
                           onClick={() => openSiswaDetail(siswaInfo)}
                           className="px-3 py-1.5 bg-fuchsia-100 text-fuchsia-700 hover:bg-fuchsia-200 rounded-lg text-xs font-semibold transition-colors"
