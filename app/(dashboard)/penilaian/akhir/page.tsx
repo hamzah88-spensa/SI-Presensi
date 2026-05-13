@@ -9,6 +9,9 @@ export default function NilaiAkhirPage() {
   const [selectedKelas, setSelectedKelas] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
 
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
+  const [selectedSiswaDetail, setSelectedSiswaDetail] = useState<any>(null);
+
   const currentKelasName = useMemo(() => {
     const kelas = data.kelas.find(k => k.id === selectedKelas);
     return kelas ? kelas.name : 'Semua Kelas';
@@ -20,6 +23,11 @@ export default function NilaiAkhirPage() {
       (s.name.toLowerCase().includes(searchQuery.toLowerCase()) || s.nisn.includes(searchQuery))
     ).sort((a, b) => a.name.localeCompare(b.name));
   }, [data.siswa, selectedKelas, searchQuery]);
+
+  const openSiswaDetail = (siswaInfo: any) => {
+    setSelectedSiswaDetail(siswaInfo);
+    setDetailModalOpen(true);
+  };
 
   return (
     <div className="space-y-6">
@@ -84,126 +92,215 @@ export default function NilaiAkhirPage() {
         <div className="mt-4 border-b-2 border-slate-900"></div>
       </div>
 
-      <div className="space-y-4">
-        {filteredSiswa.length > 0 ? (
-          filteredSiswa.map((siswa) => {
-            // Calculate Kehadiran
-            const kehadiran = data.kehadiran.filter(k => k.siswaId === siswa.id && k.semesterId === activeSemester?.id);
-            const totalHadir = kehadiran.filter(k => k.status === 'Hadir').length;
-            const totalSakit = kehadiran.filter(k => k.status === 'Sakit').length;
-            const totalIzin = kehadiran.filter(k => k.status === 'Izin').length;
-            const totalAlpa = kehadiran.filter(k => k.status === 'Alpa').length;
-            const totalBolos = kehadiran.filter(k => k.status === 'Bolos').length;
-            const totalPertemuan = kehadiran.length;
-            const percentage = totalPertemuan === 0 ? 0 : Math.round(((totalHadir + totalSakit + totalIzin) / totalPertemuan) * 100);
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden print:border-0 print:shadow-none">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-slate-50 border-b border-slate-200">
+                <th className="px-6 py-4 text-sm font-semibold text-slate-700 w-16 border-r border-slate-200 text-center">No</th>
+                <th className="px-6 py-4 text-sm font-semibold text-slate-700 border-r border-slate-200 min-w-[200px]">Nama Siswa</th>
+                <th className="px-6 py-4 text-sm font-semibold text-slate-700 w-32 border-r border-slate-200 text-center">Nilai Akhir</th>
+                <th className="px-6 py-4 text-sm font-semibold text-slate-700 w-32 border-r border-slate-200 text-center">% Kehadiran</th>
+                <th className="px-6 py-4 text-sm font-semibold text-slate-700 border-r border-slate-200 min-w-[250px] text-center">Status Lulus/Tidak Lulus per TP</th>
+                <th className="px-6 py-4 text-sm font-semibold text-slate-700 w-24 text-center no-print">Aksi</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {filteredSiswa.length > 0 ? (
+                filteredSiswa.map((siswa, idx) => {
+                  // Calculate Kehadiran
+                  const kehadiran = data.kehadiran.filter(k => k.siswaId === siswa.id && k.semesterId === activeSemester?.id);
+                  const totalHadir = kehadiran.filter(k => k.status === 'Hadir').length;
+                  const totalSakit = kehadiran.filter(k => k.status === 'Sakit').length;
+                  const totalIzin = kehadiran.filter(k => k.status === 'Izin').length;
+                  const totalAlpa = kehadiran.filter(k => k.status === 'Alpa').length;
+                  const totalBolos = kehadiran.filter(k => k.status === 'Bolos').length;
+                  const totalPertemuan = kehadiran.length;
+                  const percentage = totalPertemuan === 0 ? 0 : Math.round(((totalHadir + totalSakit + totalIzin) / totalPertemuan) * 100);
 
-            // Calculate Nilai Akhir
-            const tps = data.tujuanPembelajaran.find(tp => tp.id) ? data.tujuanPembelajaran.filter(tp => {
-              const kls = data.kelas.find(k => k.id === siswa.kelasId);
-              return kls && tp.jenjang === kls.jenjang;
-            }) : [];
+                  // Calculate Nilai Akhir
+                  const tps = data.tujuanPembelajaran.find(tp => tp.id) ? data.tujuanPembelajaran.filter(tp => {
+                    const kls = data.kelas.find(k => k.id === siswa.kelasId);
+                    return kls && tp.jenjang === kls.jenjang;
+                  }) : [];
 
-            let sumNilai = 0;
-            let sumatifCount = 0;
-            let tpDetails: any[] = [];
-            
-            tps.forEach(tp => {
-              const sumatif = data.penilaianSumatif.filter(s => s.siswaId === siswa.id && s.tpId === tp.id && s.semesterId === activeSemester?.id);
-              if (sumatif.length > 0) {
-                // assume one record per TP for simplicity or avg them
-                const s = sumatif[0];
-                const bestScore = Math.max(s.nilai, s.nilaiRemedial || 0);
-                sumNilai += bestScore;
-                sumatifCount++;
-                tpDetails.push({ tpName: tp.name, score: bestScore, kktp: tp.kktp });
-              }
-            });
+                  let sumNilai = 0;
+                  let sumatifCount = 0;
+                  let tpDetails: any[] = [];
+                  
+                  tps.forEach(tp => {
+                    const sumatif = data.penilaianSumatif.filter(s => s.siswaId === siswa.id && s.tpId === tp.id && s.semesterId === activeSemester?.id);
+                    if (sumatif.length > 0) {
+                      const s = sumatif[0];
+                      const bestScore = Math.max(s.nilai, s.nilaiRemedial || 0);
+                      sumNilai += bestScore;
+                      sumatifCount++;
+                      tpDetails.push({ tpName: tp.name, score: bestScore, kktp: tp.kktp, tuntas: bestScore >= tp.kktp });
+                    }
+                  });
 
-            const finalGrade = sumatifCount === 0 ? 0 : Math.round(sumNilai / sumatifCount);
+                  const finalGrade = sumatifCount === 0 ? 0 : Math.round(sumNilai / sumatifCount);
 
-            // Notes
-            const catatans = data.catatanKognitif?.filter(c => c.siswaId === siswa.id && c.semesterId === activeSemester?.id) || [];
+                  // Notes
+                  const catatans = data.catatanKognitif?.filter(c => c.siswaId === siswa.id && c.semesterId === activeSemester?.id) || [];
 
-            return (
-              <div key={siswa.id} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 print:shadow-none print:border-b print:rounded-none">
-                <div className="flex flex-col lg:flex-row gap-6">
-                  <div className="flex-1 space-y-4">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <h3 className="text-lg font-bold text-slate-800">{siswa.name}</h3>
-                        <p className="text-slate-500 text-sm">NISN: {siswa.nisn}</p>
-                      </div>
-                      <div className="flex gap-4 text-center">
-                        <div className="bg-fuchsia-50 p-3 rounded-xl border border-fuchsia-100 min-w-[100px]">
-                          <p className="text-xs font-semibold text-fuchsia-600 mb-1">Nilai Akhir</p>
-                          <p className="text-2xl font-bold text-fuchsia-700">{finalGrade > 0 ? finalGrade : '-'}</p>
-                        </div>
-                        <div className={`p-3 rounded-xl border min-w-[100px] ${percentage < 75 ? 'bg-rose-50 border-rose-100' : 'bg-emerald-50 border-emerald-100'}`}>
-                          <p className={`text-xs font-semibold mb-1 ${percentage < 75 ? 'text-rose-600' : 'text-emerald-600'}`}>Kehadiran</p>
-                          <p className={`text-2xl font-bold ${percentage < 75 ? 'text-rose-700' : 'text-emerald-700'}`}>{percentage}%</p>
-                          <p className={`text-[10px] mt-1 ${percentage < 75 ? 'text-rose-500' : 'text-emerald-500'}`}>H:{totalHadir} S:{totalSakit} I:{totalIzin} A:{totalAlpa} B:{totalBolos}</p>
-                        </div>
-                      </div>
-                    </div>
+                  const siswaInfo = {
+                    siswa,
+                    percentage,
+                    totalHadir, totalSakit, totalIzin, totalAlpa, totalBolos,
+                    finalGrade,
+                    tpDetails,
+                    catatans
+                  };
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-slate-100">
-                      <div>
-                        <h4 className="font-semibold text-slate-700 mb-3 flex items-center gap-2 text-sm">
-                          <BookOpen className="w-4 h-4 text-slate-400" />
-                          Detail Nilai per TP
-                        </h4>
-                        <div className="space-y-2">
-                          {tpDetails.length > 0 ? tpDetails.map((tp, idx) => (
-                            <div key={idx} className="flex justify-between items-center text-sm p-2 bg-slate-50 rounded-lg">
-                              <span className="text-slate-600 truncate max-w-[200px]" title={tp.tpName}>{tp.tpName}</span>
-                              <div className="flex items-center gap-2">
-                                <span className="text-xs text-slate-400">KKTP {tp.kktp}</span>
-                                <span className={`font-bold ${tp.score >= tp.kktp ? 'text-emerald-600' : 'text-rose-600'}`}>{tp.score}</span>
-                              </div>
+                  return (
+                    <tr key={siswa.id} className="hover:bg-slate-50/50 transition-colors">
+                      <td className="px-6 py-4 text-sm text-slate-600 border-r border-slate-100 text-center">{idx + 1}</td>
+                      <td className="px-6 py-4 text-sm border-r border-slate-100">
+                        <div className="font-medium text-slate-900">{siswa.name}</div>
+                        <div className="text-xs text-slate-400">{siswa.nisn}</div>
+                      </td>
+                      <td className="px-6 py-4 text-center border-r border-slate-100">
+                        <span className="font-bold text-lg text-slate-700">{finalGrade > 0 ? finalGrade : '-'}</span>
+                      </td>
+                      <td className="px-6 py-4 text-center border-r border-slate-100">
+                        <span className={`font-bold ${percentage < 75 ? 'text-rose-600' : 'text-emerald-600'}`}>
+                          {percentage}%
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 border-r border-slate-100">
+                        <div className="flex flex-col gap-1 items-center">
+                          {tpDetails.length > 0 ? tpDetails.map((td, i) => (
+                            <div key={i} className="flex justify-between items-center w-full max-w-[200px] text-xs">
+                              <span className="truncate mr-2 text-slate-600" title={td.tpName}>TP {i+1}</span>
+                              <span className={`px-2 py-0.5 rounded font-medium ${td.tuntas ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
+                                {td.tuntas ? 'Lulus' : 'Tidak Lulus'}
+                              </span>
                             </div>
                           )) : (
-                            <p className="text-sm text-slate-400 italic">Belum ada nilai yang diinput.</p>
+                            <span className="text-xs text-slate-400 italic">Belum ada data</span>
                           )}
                         </div>
-                      </div>
+                      </td>
+                      <td className="px-6 py-4 text-center no-print">
+                        <button
+                          onClick={() => openSiswaDetail(siswaInfo)}
+                          className="px-3 py-1.5 bg-fuchsia-100 text-fuchsia-700 hover:bg-fuchsia-200 rounded-lg text-xs font-semibold transition-colors"
+                        >
+                          Detail
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
+              ) : (
+                <tr>
+                  <td colSpan={6} className="px-6 py-12 text-center text-slate-500">
+                    <Users className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+                    Tidak ada siswa yang sesuai kriteria pencarian.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
 
-                      <div>
-                        <h4 className="font-semibold text-slate-700 mb-3 flex items-center gap-2 text-sm">
-                          <AlertCircle className="w-4 h-4 text-slate-400" />
-                          Catatan Perkembangan
-                        </h4>
-                        {catatans.length > 0 ? (
-                          <div className="space-y-3">
-                            {catatans.map(c => {
-                              const tpName = data.tujuanPembelajaran.find(t => t.id === c.tpId)?.name || 'Umum';
-                              return (
-                                <div key={c.id} className="bg-slate-50 p-3 rounded-xl text-sm border border-slate-100">
-                                  <div className="flex justify-between items-center mb-1">
-                                    <span className="text-xs font-semibold text-indigo-600">{tpName}</span>
-                                    <span className="text-[10px] text-slate-400">{new Date(c.createdAt).toLocaleDateString('id-ID')}</span>
-                                  </div>
-                                  <p className="text-slate-700">{c.catatan}</p>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        ) : (
-                          <p className="text-sm text-slate-400 italic">Belum ada catatan anekdot/kognitif.</p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
+      {/* Detail Modal */}
+      {detailModalOpen && selectedSiswaDetail && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+              <div>
+                <h3 className="text-xl font-bold text-slate-800">{selectedSiswaDetail.siswa.name}</h3>
+                <p className="text-sm text-slate-500">NISN: {selectedSiswaDetail.siswa.nisn}</p>
+              </div>
+              <button 
+                onClick={() => setDetailModalOpen(false)}
+                className="text-slate-400 hover:text-slate-600 p-2"
+              >
+                Tutup
+              </button>
+            </div>
+            
+            <div className="p-6 overflow-y-auto space-y-6">
+              {/* Top Stats */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-fuchsia-50 p-4 rounded-xl border border-fuchsia-100 flex flex-col items-center justify-center text-center">
+                  <p className="text-sm font-semibold text-fuchsia-600 mb-1">Nilai Akhir</p>
+                  <p className="text-3xl font-bold text-fuchsia-700">{selectedSiswaDetail.finalGrade > 0 ? selectedSiswaDetail.finalGrade : '-'}</p>
+                </div>
+                <div className={`p-4 rounded-xl border flex flex-col items-center justify-center text-center ${selectedSiswaDetail.percentage < 75 ? 'bg-rose-50 border-rose-100' : 'bg-emerald-50 border-emerald-100'}`}>
+                  <p className={`text-sm font-semibold mb-1 ${selectedSiswaDetail.percentage < 75 ? 'text-rose-600' : 'text-emerald-600'}`}>Kehadiran</p>
+                  <p className={`text-3xl font-bold ${selectedSiswaDetail.percentage < 75 ? 'text-rose-700' : 'text-emerald-700'}`}>{selectedSiswaDetail.percentage}%</p>
                 </div>
               </div>
-            );
-          })
-        ) : (
-          <div className="bg-white p-12 text-center rounded-2xl border border-slate-100 shadow-sm">
-            <Users className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-            <p className="text-slate-500">Tidak ada siswa yang sesuai kriteria pencarian.</p>
+
+              {/* Rincian Kehadiran */}
+              <div>
+                <h4 className="font-semibold text-slate-700 mb-3 flex items-center gap-2 text-sm border-b pb-2">
+                  <CalendarDays className="w-4 h-4 text-slate-400" />
+                  Rincian Kehadiran
+                </h4>
+                <div className="grid grid-cols-5 gap-2 text-center text-sm">
+                  <div className="bg-slate-50 p-2 rounded-lg border border-slate-100"><div className="font-bold text-emerald-600">{selectedSiswaDetail.totalHadir}</div><div className="text-xs text-slate-500 mt-1">Hadir</div></div>
+                  <div className="bg-slate-50 p-2 rounded-lg border border-slate-100"><div className="font-bold text-blue-600">{selectedSiswaDetail.totalIzin}</div><div className="text-xs text-slate-500 mt-1">Izin</div></div>
+                  <div className="bg-slate-50 p-2 rounded-lg border border-slate-100"><div className="font-bold text-amber-600">{selectedSiswaDetail.totalSakit}</div><div className="text-xs text-slate-500 mt-1">Sakit</div></div>
+                  <div className="bg-slate-50 p-2 rounded-lg border border-slate-100"><div className="font-bold text-rose-600">{selectedSiswaDetail.totalAlpa}</div><div className="text-xs text-slate-500 mt-1">Alpa</div></div>
+                  <div className="bg-slate-50 p-2 rounded-lg border border-slate-100"><div className="font-bold text-purple-600">{selectedSiswaDetail.totalBolos}</div><div className="text-xs text-slate-500 mt-1">Bolos</div></div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h4 className="font-semibold text-slate-700 mb-3 flex items-center gap-2 text-sm border-b pb-2">
+                    <BookOpen className="w-4 h-4 text-slate-400" />
+                    Detail Nilai per TP
+                  </h4>
+                  <div className="space-y-2">
+                    {selectedSiswaDetail.tpDetails.length > 0 ? selectedSiswaDetail.tpDetails.map((tp: any, idx: number) => (
+                      <div key={idx} className="flex justify-between items-center text-sm p-3 bg-slate-50 border border-slate-100 rounded-lg">
+                        <span className="text-slate-700 w-2/3 leading-snug">{tp.tpName}</span>
+                        <div className="flex flex-col items-end">
+                          <span className={`font-bold text-lg ${tp.tuntas ? 'text-emerald-600' : 'text-rose-600'}`}>{tp.score}</span>
+                          <span className="text-[10px] text-slate-400">KKTP {tp.kktp}</span>
+                        </div>
+                      </div>
+                    )) : (
+                      <p className="text-sm text-slate-400 italic">Belum ada nilai yang diinput.</p>
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="font-semibold text-slate-700 mb-3 flex items-center gap-2 text-sm border-b pb-2">
+                    <AlertCircle className="w-4 h-4 text-slate-400" />
+                    Catatan Perkembangan (Anekdot)
+                  </h4>
+                  {selectedSiswaDetail.catatans.length > 0 ? (
+                    <div className="space-y-3">
+                      {selectedSiswaDetail.catatans.map((c: any) => {
+                        const tpName = data.tujuanPembelajaran.find(t => t.id === c.tpId)?.name || 'Umum';
+                        return (
+                          <div key={c.id} className="bg-slate-50 p-3 rounded-xl text-sm border border-slate-100">
+                            <div className="flex justify-between items-start mb-2">
+                              <span className="text-[11px] font-semibold text-indigo-600 max-w-[70%]">{tpName}</span>
+                              <span className="text-[10px] bg-white px-2 py-1 rounded text-slate-500 border border-slate-200">{new Date(c.createdAt).toLocaleDateString('id-ID')}</span>
+                            </div>
+                            <p className="text-slate-700 leading-relaxed">{c.catatan}</p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-slate-400 italic">Belum ada catatan anekdot/kognitif yang dimasukkan.</p>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

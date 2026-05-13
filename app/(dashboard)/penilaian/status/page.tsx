@@ -125,31 +125,30 @@ export default function StatusNilaiPage() {
               <tr className="bg-slate-50 border-b border-slate-200">
                 <th className="px-6 py-4 text-sm font-semibold text-slate-700 sticky left-0 bg-slate-50 z-10 border-r border-slate-200">No</th>
                 <th className="px-6 py-4 text-sm font-semibold text-slate-700 sticky left-[52px] bg-slate-50 z-10 border-r border-slate-200 min-w-[200px]">Nama Siswa</th>
-                <th className="px-6 py-4 text-sm font-semibold text-slate-700 text-center min-w-[150px] border-r border-slate-200">Rekap Absensi</th>
+                <th className="px-3 py-2 text-xs font-semibold text-slate-700 text-center border-r border-slate-200">% Kehadiran</th>
                 {filteredTPs.map((tp, idx) => (
-                  <th key={tp.id} className="px-4 py-4 text-sm font-semibold text-slate-700 text-center min-w-[120px]">
+                  <th key={tp.id} className="px-2 py-2 text-xs font-semibold text-slate-700 text-center min-w-[70px]">
                     <div className="flex flex-col items-center">
-                      <span className="text-[10px] text-slate-400 uppercase tracking-wider">TP {idx + 1}</span>
-                      <span className="truncate max-w-[100px]" title={tp.name}>{tp.name}</span>
-                      <span className="text-[10px] bg-indigo-100 text-indigo-600 px-1.5 py-0.5 rounded mt-1">KKTP: {tp.kktp}</span>
+                      <span className="text-[9px] text-slate-400 uppercase tracking-wider" title={tp.name}>TP {idx + 1}</span>
+                      <span className="text-[9px] bg-indigo-100 text-indigo-600 px-1 rounded mt-0.5" title={`KKTP: ${tp.kktp}`}>KKTP {tp.kktp}</span>
                     </div>
                   </th>
                 ))}
-                <th className="px-6 py-4 text-sm font-semibold text-slate-700 text-center no-print">Aksi</th>
+                <th className="px-3 py-2 text-xs font-semibold text-slate-700 text-center no-print border-l border-slate-200">Aksi</th>
               </tr>
             </thead>
               <tbody className="divide-y divide-slate-100">
               {filteredSiswa.length > 0 ? (
                 filteredSiswa.map((siswa, index) => {
                   const kehadiran = data.kehadiran.filter(k => k.siswaId === siswa.id && k.semesterId === activeSemester?.id);
-                  let totalH = 0, totalI = 0, totalS = 0, totalA = 0, totalB = 0;
+                  let totalH = 0, totalI = 0, totalS = 0;
                   kehadiran.forEach(k => {
                     if (k.status === 'Hadir') totalH++;
                     else if (k.status === 'Izin') totalI++;
                     else if (k.status === 'Sakit') totalS++;
-                    else if (k.status === 'Alpa') totalA++;
-                    else if (k.status === 'Bolos') totalB++;
                   });
+                  const totalPertemuan = kehadiran.length;
+                  const percentage = totalPertemuan === 0 ? 0 : Math.round(((totalH + totalS + totalI) / totalPertemuan) * 100);
 
                   return (
                   <tr key={siswa.id} className="hover:bg-slate-50/50 transition-colors">
@@ -160,14 +159,10 @@ export default function StatusNilaiPage() {
                         <span className="text-xs text-slate-400">{siswa.nisn}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-xs font-semibold text-center border-r border-slate-100">
-                      <div className="flex justify-center gap-2">
-                        <span className="text-emerald-500">H: {totalH}</span>
-                        <span className="text-blue-500">I: {totalI}</span>
-                        <span className="text-amber-500">S: {totalS}</span>
-                        <span className="text-rose-500">A: {totalA}</span>
-                        <span className="text-purple-500">B: {totalB}</span>
-                      </div>
+                    <td className="px-3 py-2 text-sm font-bold text-center border-r border-slate-100">
+                      <span className={percentage < 75 ? 'text-rose-600' : 'text-emerald-600'}>
+                        {percentage}%
+                      </span>
                     </td>
                     {filteredTPs.map((tp) => {
                       const status = getTPStatus(siswa.id, tp.id);
