@@ -4,6 +4,11 @@ import { useState, useMemo, useEffect } from 'react';
 import { useData } from '@/lib/data-context';
 import { AlertCircle, UserCheck, Search, Filter, BookOpen, Clock, Calendar, CheckCircle2, X } from 'lucide-react';
 import { toast } from 'sonner';
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null;
 
 interface ProgramRemedial {
   id: string;
@@ -62,6 +67,7 @@ export default function RemedialPage() {
   const [formPic, setFormPic] = useState('');
   const [formTarget, setFormTarget] = useState('');
   const [formStatus, setFormStatus] = useState<ProgramRemedial['status']>('Direncanakan');
+  const [formNilai, setFormNilai] = useState<number | ''>('');
   
   // Input Nilai Remedial State
   const [inputNilaiModal, setInputNilaiModal] = useState(false);
@@ -70,25 +76,65 @@ export default function RemedialPage() {
 
   useEffect(() => {
     if (activeSemester) {
-      const saved = localStorage.getItem(`remedial_programs_${activeSemester.id}`);
-      if (saved) {
-        try {
-          const parsed = JSON.parse(saved);
-          setTimeout(() => setPrograms(parsed), 0);
-        } catch (e) {
-          console.error("Failed to parse remedial programs");
+      const fetchFromSupabase = async () => {
+        if (supabase) {
+          try {
+            const { data, error } = await supabase
+              .from('remedial_programs')
+              .select('*');
+            if (!error && data) {
+              setPrograms(data);
+              return;
+            }
+          } catch (err) {
+            console.error("Failed to fetch from supabase", err);
+          }
+        }
+        
+        const saved = localStorage.getItem(`remedial_programs_${activeSemester.id}`);
+        if (saved) {
+          try {
+            const parsed = JSON.parse(saved);
+            setTimeout(() => setPrograms(parsed), 0);
+          } catch (e) {
+            console.error("Failed to parse remedial programs");
+            setTimeout(() => setPrograms([]), 0);
+          }
+        } else {
           setTimeout(() => setPrograms([]), 0);
         }
-      } else {
-        setTimeout(() => setPrograms([]), 0);
-      }
+      };
+      
+      fetchFromSupabase();
     }
   }, [activeSemester]);
 
-  const savePrograms = (newPrograms: ProgramRemedial[]) => {
+  const savePrograms = async (newPrograms: ProgramRemedial[], newProgOrUpdated: ProgramRemedial | null = null, deleteId: string | null = null) => {
     if (!activeSemester) return;
     setPrograms(newPrograms);
     localStorage.setItem(`remedial_programs_${activeSemester.id}`, JSON.stringify(newPrograms));
+    
+    if (supabase) {
+      try {
+        if (deleteId) {
+          await supabase.from('remedial_programs').delete().eq('id', deleteId);
+        } else if (newProgOrUpdated) {
+          await supabase.from('remedial_programs').upsert({
+            id: newProgOrUpdated.id,
+            siswaId: newProgOrUpdated.siswaId,
+            tpId: newProgOrUpdated.tpId,
+            jenis: newProgOrUpdated.jenis,
+            jadwal: newProgOrUpdated.jadwal,
+            pic: newProgOrUpdated.pic,
+            targetSelesai: newProgOrUpdated.targetSelesai,
+            status: newProgOrUpdated.status,
+            createdAt: newProgOrUpdated.createdAt
+          });
+        }
+      } catch(err) {
+        console.error("Failed to sync to supabase", err);
+      }
+    }
   };
 
   const openNewModal = (siswaId?: string, tpId?: string) => {
@@ -103,6 +149,7 @@ export default function RemedialPage() {
     setFormPic('');
     setFormTarget('');
     setFormStatus('Direncanakan');
+    setFormNilai('');
     setIsModalOpen(true);
   };
 
@@ -114,21 +161,32 @@ export default function RemedialPage() {
     setFormPic(prog.pic);
     setFormTarget(prog.targetSelesai);
     setFormStatus(prog.status);
+    
+    const sumatif = data.penilaianSumatif.find(s => s.siswaId === prog.siswaId && s.tpId === prog.tpId && s.semesterId === activeSemester?.id);
+    setFormNilai(sumatif?.nilaiRemedial || '');
+    
     setIsModalOpen(true);
   };
 
-  const handleSaveProgram = (e: React.FormEvent) => {
+  const handleSaveProgram = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formSiswaTp || !formJadwal || !formPic || !formTarget) {
       toast.error('Gagal, Harap lengkapi semua field!');
       return;
     }
 
+    if (formStatus === 'Selesai' && formNilai === '') {
+      toast.error('Harap masukkan nilai remedial!');
+      return;
+    }
+
     const [siswaId, tpId] = formSiswaTp.split('|');
 
+    let updatedOrNewProg: ProgramRemedial;
+
     if (editingProgram) {
-      const updated = programs.map(p => p.id === editingProgram.id ? {
-        ...p,
+      updatedOrNewProg = {
+        ...editingProgram,
         siswaId,
         tpId,
         jenis: formJenis,
@@ -136,11 +194,12 @@ export default function RemedialPage() {
         pic: formPic,
         targetSelesai: formTarget,
         status: formStatus
-      } : p);
-      savePrograms(updated);
+      };
+      const updated = programs.map(p => p.id === editingProgram.id ? updatedOrNewProg : p);
+      await savePrograms(updated, updatedOrNewProg);
       toast.success('Program remedial berhasil diperbarui');
     } else {
-      const newProg: ProgramRemedial = {
+      updatedOrNewProg = {
         id: crypto.randomUUID(),
         siswaId,
         tpId,
@@ -151,16 +210,34 @@ export default function RemedialPage() {
         status: formStatus,
         createdAt: Date.now()
       };
-      savePrograms([...programs, newProg]);
+      await savePrograms([...programs, updatedOrNewProg], updatedOrNewProg);
       toast.success('Program remedial berhasil dibuat');
+    }
+    
+    if (formStatus === 'Selesai' && formNilai !== '') {
+      // Save Nilai Ke Sumatif
+      const sumatif = data.penilaianSumatif.find(s => s.siswaId === siswaId && s.tpId === tpId && s.semesterId === activeSemester?.id);
+      if (sumatif) {
+        try {
+          await savePenilaianSumatifBatch([{
+            ...sumatif,
+            nilaiRemedial: Number(formNilai)
+          }]);
+          toast.success('Nilai Remedial tersimpan ke database sumatif');
+        } catch (e) {
+          toast.error('Gagal menyimpan nilai ke database sumatif');
+        }
+      } else {
+        toast.error('Data Sumatif tidak ditemukan untuk kelas/TP ini. Nilai remedial hanya tersimpan di program.');
+      }
     }
     
     setIsModalOpen(false);
   };
 
-  const deleteProgram = (id: string) => {
+  const deleteProgram = async (id: string) => {
     if(confirm('Yakin ingin menghapus program ini?')) {
-      savePrograms(programs.filter(p => p.id !== id));
+      await savePrograms(programs.filter(p => p.id !== id), null, id);
       toast.success('Program dihapus');
     }
   };
@@ -521,6 +598,22 @@ export default function RemedialPage() {
                   </select>
                 </div>
               </div>
+
+              {formStatus === 'Selesai' && (
+                <div className="space-y-1 p-3 bg-indigo-50 rounded-xl border border-indigo-100">
+                  <label className="text-sm font-semibold text-indigo-900">Nilai Remedial yang Diperoleh</label>
+                  <input 
+                    type="number"
+                    min="0"
+                    max="100"
+                    placeholder="0 - 100"
+                    className="w-full px-3 py-2 rounded-xl border border-indigo-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 text-sm bg-white"
+                    value={formNilai}
+                    onChange={(e) => setFormNilai(e.target.value === '' ? '' : Number(e.target.value))}
+                  />
+                  <p className="text-xs text-indigo-600/80 mt-1">Nilai ini juga akan otomatis tersimpan ke database nilai akhir (Sumatif).</p>
+                </div>
+              )}
 
               <div className="pt-4 border-t border-slate-100 flex justify-end gap-3">
                 <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 font-medium">Batal</button>
