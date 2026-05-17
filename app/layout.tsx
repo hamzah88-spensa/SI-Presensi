@@ -1,23 +1,22 @@
-import type { Metadata } from 'next';
 import './globals.css';
-import { DataProvider } from '@/lib/data-context';
+import { Inter } from 'next/font/google';
 import { Toaster } from 'sonner';
-import { AutoLogout } from '@/components/AutoLogout';
+import { DataProvider } from '@/lib/data-context';
 
-export const metadata: Metadata = {
-  title: 'Sistem Kehadiran & Penilaian',
-  description: 'Aplikasi pencatatan kehadiran dan penilaian siswa',
-};
+const inter = Inter({ subsets: ['latin'] });
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="en">
-      <body suppressHydrationWarning className="bg-slate-50 text-slate-900 antialiased font-sans">
+      <body className={inter.className}>
         <DataProvider>
-          <Toaster position="top-right" richColors closeButton />
-          <AutoLogout />
           {children}
         </DataProvider>
+        <Toaster />
       </body>
     </html>
   );
