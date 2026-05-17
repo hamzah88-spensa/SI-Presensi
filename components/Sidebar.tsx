@@ -40,6 +40,7 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
         { name: 'Input Sumatif', href: '/penilaian/sumatif', icon: FileText },
         { name: 'Rekap Nilai', href: '/penilaian/rekap', icon: FileText },
         { name: 'Status Nilai', href: '/penilaian/status', icon: CheckSquare },
+        { name: 'Input Remedial', href: '/penilaian/remedial', icon: FileText },
         { name: 'Nilai Akhir', href: '/penilaian/akhir', icon: FileText },
         { name: 'Perkembangan Siswa', href: '/penilaian/perkembangan', icon: Users },
       ]
