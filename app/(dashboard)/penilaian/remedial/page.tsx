@@ -56,7 +56,7 @@ export default function RemedialPage() {
   }, [data.siswa, data.tujuanPembelajaran, data.penilaianSumatif, data.kelas, activeSemester, selectedKelas, searchQuery]);
 
   // Form State
-  const [formSiswaTp, setFormSiswaTp] = useState<string>(''); // format: "siswaId-tpId"
+  const [formSiswaTp, setFormSiswaTp] = useState<string>(''); // format: "siswaId|tpId"
   const [formJenis, setFormJenis] = useState<ProgramRemedial['jenis']>('Pembelajaran Ulang');
   const [formJadwal, setFormJadwal] = useState('');
   const [formPic, setFormPic] = useState('');
@@ -94,7 +94,7 @@ export default function RemedialPage() {
   const openNewModal = (siswaId?: string, tpId?: string) => {
     setEditingProgram(null);
     if (siswaId && tpId) {
-      setFormSiswaTp(`${siswaId}-${tpId}`);
+      setFormSiswaTp(`${siswaId}|${tpId}`);
     } else {
       setFormSiswaTp('');
     }
@@ -108,7 +108,7 @@ export default function RemedialPage() {
 
   const openEditModal = (prog: ProgramRemedial) => {
     setEditingProgram(prog);
-    setFormSiswaTp(`${prog.siswaId}-${prog.tpId}`);
+    setFormSiswaTp(`${prog.siswaId}|${prog.tpId}`);
     setFormJenis(prog.jenis);
     setFormJadwal(prog.jadwal);
     setFormPic(prog.pic);
@@ -124,7 +124,7 @@ export default function RemedialPage() {
       return;
     }
 
-    const [siswaId, tpId] = formSiswaTp.split('-');
+    const [siswaId, tpId] = formSiswaTp.split('|');
 
     if (editingProgram) {
       const updated = programs.map(p => p.id === editingProgram.id ? {
@@ -183,7 +183,7 @@ export default function RemedialPage() {
     }
     try {
       await savePenilaianSumatifBatch([{
-        id: selectedSumatifForNilai.id, // we have to update the existing record
+        id: selectedSumatifForNilai.id,
         siswaId: selectedSumatifForNilai.siswaId,
         tpId: selectedSumatifForNilai.tpId,
         teknik: selectedSumatifForNilai.teknik,
@@ -220,7 +220,6 @@ export default function RemedialPage() {
         </button>
       </div>
 
-      {/* Filter Section */}
       <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
@@ -256,7 +255,6 @@ export default function RemedialPage() {
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        {/* Left Column: Deteksi Siswa Perlu Remedial */}
         <div className="xl:col-span-1 space-y-4">
           <div className="bg-white rounded-2xl shadow-sm border border-slate-100 flex flex-col h-full max-h-[800px]">
             <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-rose-50/50 rounded-t-2xl">
@@ -314,7 +312,6 @@ export default function RemedialPage() {
           </div>
         </div>
 
-        {/* Right Column: Tracking Program Remedial */}
         <div className="xl:col-span-2 space-y-4">
           <div className="bg-white rounded-2xl shadow-sm border border-slate-100 h-full max-h-[800px] flex flex-col">
             <div className="p-4 border-b border-slate-100 flex justify-between items-center">
@@ -429,7 +426,6 @@ export default function RemedialPage() {
         </div>
       </div>
 
-      {/* Modal Program Remedial */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col">
@@ -449,17 +445,16 @@ export default function RemedialPage() {
                   className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 text-sm bg-slate-50"
                   value={formSiswaTp}
                   onChange={(e) => setFormSiswaTp(e.target.value)}
-                  disabled={!!editingProgram} // lock if editing
+                  disabled={!!editingProgram}
                 >
                   <option value="">Pilih Siswa & TP (Belum Tuntas)</option>
                   {studentsNeedingRemedial.map((item, i) => (
-                    <option key={i} value={`${item.siswa.id}-${item.tp.id}`}>
+                    <option key={i} value={`${item.siswa.id}|${item.tp.id}`}>
                       {item.siswa.name} - {item.tp.name} (T: {Math.max(item.sumatif.nilai, item.sumatif.nilaiRemedial || 0)} / {item.tp.kktp})
                     </option>
                   ))}
-                  {/* Allow selecting currently edited even if it became tuntas temporarily */}
-                  {editingProgram && !studentsNeedingRemedial.some(s => `${s.siswa.id}-${s.tp.id}` === `${editingProgram.siswaId}-${editingProgram.tpId}`) && (
-                    <option value={`${editingProgram.siswaId}-${editingProgram.tpId}`}>
+                  {editingProgram && !studentsNeedingRemedial.some(s => `${s.siswa.id}|${s.tp.id}` === `${editingProgram.siswaId}|${editingProgram.tpId}`) && (
+                    <option value={`${editingProgram.siswaId}|${editingProgram.tpId}`}>
                        {data.siswa.find(s => s.id === editingProgram.siswaId)?.name} - {data.tujuanPembelajaran.find(t => t.id === editingProgram.tpId)?.name}
                     </option>
                   )}
@@ -536,7 +531,6 @@ export default function RemedialPage() {
         </div>
       )}
 
-      {/* Modal Input Nilai Remedial */}
       {inputNilaiModal && selectedSumatifForNilai && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden flex flex-col">
