@@ -37,7 +37,8 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
       icon: FileText,
       items: [
         { name: 'Input Formatif', href: '/penilaian/formatif', icon: FileText },
-        { name: 'Input Sumatif', href: '/penilaian/sumatif', icon: FileText },
+        { name: 'Input Sumatif TP', href: '/penilaian/sumatif', icon: FileText },
+        { name: 'Input Sumatif Akhir', href: '/penilaian/sumatif-akhir', icon: FileText },
         { name: 'Rekap Nilai', href: '/penilaian/rekap', icon: FileText },
         { name: 'Status Nilai', href: '/penilaian/status', icon: CheckSquare },
         { name: 'Input Remedial', href: '/penilaian/remedial', icon: FileText },
@@ -52,6 +53,14 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
       items: [
         { name: 'Input Jurnal', href: '/jurnal/input', icon: BookOpen },
         { name: 'Rekap Jurnal', href: '/jurnal/rekap', icon: FileText },
+      ]
+    },
+    {
+      title: 'Rapor',
+      key: 'rapor',
+      icon: FileText,
+      items: [
+        { name: 'Cetak Rapor', href: '/rapor', icon: FileText },
       ]
     }
   ], []);

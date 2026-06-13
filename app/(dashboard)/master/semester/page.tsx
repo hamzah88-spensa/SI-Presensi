@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useData } from '@/lib/data-context';
 import { Plus, Edit2, Trash2, CheckCircle, XCircle } from 'lucide-react';
 import { toast } from 'sonner';

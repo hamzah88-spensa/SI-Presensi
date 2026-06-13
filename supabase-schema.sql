@@ -95,6 +95,28 @@ CREATE TABLE agendas (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
+-- 10. Remedial Program Table
+CREATE TABLE remedial_program (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  siswa_id UUID NOT NULL REFERENCES siswa(id) ON DELETE CASCADE,
+  semester_id UUID NOT NULL REFERENCES semesters(id) ON DELETE CASCADE,
+  tp_id UUID NOT NULL REFERENCES tujuan_pembelajaran(id) ON DELETE CASCADE,
+  bentuk_remedial TEXT NOT NULL,
+  nilai_awal INTEGER NOT NULL,
+  nilai_akhir INTEGER NOT NULL,
+  tanggal DATE NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- 11. Sumatif Akhir Semester Table
+CREATE TABLE sumatif_akhir (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  siswa_id UUID NOT NULL REFERENCES siswa(id) ON DELETE CASCADE,
+  semester_id UUID NOT NULL REFERENCES semesters(id) ON DELETE CASCADE,
+  nilai INTEGER NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
 -- Enable Row Level Security (RLS)
 -- Since this is a single-user admin app for now, we'll allow all operations for authenticated users (anon key in this context)
 -- In a real production app with multiple users, you'd restrict this based on auth.uid()
@@ -108,6 +130,8 @@ ALTER TABLE penilaian_formatif ENABLE ROW LEVEL SECURITY;
 ALTER TABLE penilaian_sumatif ENABLE ROW LEVEL SECURITY;
 ALTER TABLE jurnal ENABLE ROW LEVEL SECURITY;
 ALTER TABLE agendas ENABLE ROW LEVEL SECURITY;
+ALTER TABLE remedial_program ENABLE ROW LEVEL SECURITY;
+ALTER TABLE sumatif_akhir ENABLE ROW LEVEL SECURITY;
 
 -- Create policies to allow all operations (for demo/admin purposes)
 CREATE POLICY "Allow all operations for anon" ON semesters FOR ALL USING (true);
@@ -119,3 +143,5 @@ CREATE POLICY "Allow all operations for anon" ON penilaian_formatif FOR ALL USIN
 CREATE POLICY "Allow all operations for anon" ON penilaian_sumatif FOR ALL USING (true);
 CREATE POLICY "Allow all operations for anon" ON jurnal FOR ALL USING (true);
 CREATE POLICY "Allow all operations for anon" ON agendas FOR ALL USING (true);
+CREATE POLICY "Allow all operations for anon" ON remedial_program FOR ALL USING (true);
+CREATE POLICY "Allow all operations for anon" ON sumatif_akhir FOR ALL USING (true);

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useData, Agenda } from '@/lib/data-context';
 import { 
   format, 
@@ -72,7 +72,7 @@ export default function KalenderPage() {
   const currentYear = format(currentDate, 'yyyy');
 
   // Fetch holidays
-  React.useEffect(() => {
+  useEffect(() => {
     const fetchHolidays = async () => {
       setIsLoadingHolidays(true);
       try {

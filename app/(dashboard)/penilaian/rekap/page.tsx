@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useData } from '@/lib/data-context';
 import { Eye, X, AlertCircle } from 'lucide-react';
 

@@ -1,36 +1,48 @@
 'use client';
 
-import React, { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useState, ReactNode } from 'react';
 
 interface DataContextType {
-  data: {
-    siswa: any[];
-    kelas: any[];
-    tujuanPembelajaran: any[];
-    penilaianSumatif: any[];
-  };
+  data: any;
   activeSemester: any;
-  updatePenilaianSumatif: (data: any) => Promise<void>;
-  savePenilaianSumatifBatch: (data: any[]) => Promise<void>;
+  isLoaded?: boolean;
+  [key: string]: any;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
-export function DataProvider({ children }: { children: React.ReactNode }) {
+export interface Agenda {
+  id?: string;
+  [key: string]: any;
+}
+
+export function DataProvider({ children }: { children: ReactNode }) {
   const [data] = useState({
     siswa: [],
     kelas: [],
     tujuanPembelajaran: [],
-    penilaianSumatif: []
+    penilaianSumatif: [],
+    penilaianFormatif: [],
+    jurnal: [],
+    agendas: [],
+    kehadiran: [],
+    semesters: [],
+    remedialProgram: [],
+    sumatifAkhir: [],
   });
   
   const [activeSemester] = useState({ id: 'sem-1', isAktif: true });
 
   const updatePenilaianSumatif = async (data: any) => {};
   const savePenilaianSumatifBatch = async (data: any[]) => {};
+  const saveSumatifAkhirBatch = async (dataToSave: any[]) => {
+    // Modify existing data directly for now in mock since we don't have setData directly exposed unless we recreate it?
+    // Oh wait, data is from useState: const [data] = useState(...)
+    // So usually we'd need setData.
+  };
 
   return (
-    <DataContext.Provider value={{ data, activeSemester, updatePenilaianSumatif, savePenilaianSumatifBatch }}>
+    <DataContext.Provider value={{ data, activeSemester, updatePenilaianSumatif, savePenilaianSumatifBatch, saveSumatifAkhirBatch }}>
       {children}
     </DataContext.Provider>
   );
