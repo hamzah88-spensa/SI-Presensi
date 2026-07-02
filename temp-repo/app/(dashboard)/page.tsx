@@ -3,7 +3,7 @@
 import { useData } from '@/lib/data-context';
 import { Users, BookOpen, CheckSquare, FileText, TrendingUp, AlertTriangle, CheckCircle2, MessageSquare, X } from 'lucide-react';
 import Link from 'next/link';
-import React, { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 
 export default function Dashboard() {
   const { data, activeSemester, isLoaded } = useData();

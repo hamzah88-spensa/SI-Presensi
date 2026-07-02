@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, ReactNode } from 'react';
+import { createContext, useContext, useState, ReactNode } from 'react';
 
 interface DataContextType {
   data: any;
@@ -17,7 +17,7 @@ export interface Agenda {
 }
 
 export function DataProvider({ children }: { children: ReactNode }) {
-  const [data] = React.useState({
+  const [data] = useState({
     siswa: [],
     kelas: [],
     tujuanPembelajaran: [],
@@ -31,7 +31,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     sumatifAkhir: [],
   });
   
-  const [activeSemester] = React.useState({ id: 'sem-1', isAktif: true });
+  const [activeSemester] = useState({ id: 'sem-1', isAktif: true });
 
   const updatePenilaianSumatif = async (data: any) => {};
   const savePenilaianSumatifBatch = async (data: any[]) => {};
